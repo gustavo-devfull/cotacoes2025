@@ -25,3 +25,4 @@ export const COTACOES_COLLECTION = "cotacoes";
 
 // Export Firebase functions
 export { addDoc, getDocs, updateDoc, deleteDoc, doc, collection, query, orderBy, onSnapshot };
+

@@ -178,3 +178,4 @@ console.log('URL:', imageUrl);
 4. **Validar** estados visuais
 
 **Sistema pronto para carregar imagens .jpg do FTP! 🚀**
+

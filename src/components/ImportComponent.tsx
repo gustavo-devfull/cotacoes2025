@@ -14,6 +14,9 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [shopNo, setShopNo] = useState<string>('');
+  const [nomeContato, setNomeContato] = useState<string>('');
+  const [telefoneContato, setTelefoneContato] = useState<string>('');
+  const [dataCotacao, setDataCotacao] = useState<string>('');
   const [importType, setImportType] = useState<ImportType>('standard');
   const [importResult, setImportResult] = useState<{
     total: number;
@@ -36,6 +39,21 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
 
     if (!shopNo.trim()) {
       alert('Por favor, preencha o campo SHOP NO antes de importar a planilha');
+      return;
+    }
+
+    if (!nomeContato.trim()) {
+      alert('Por favor, preencha o campo Nome do Contato antes de importar a planilha');
+      return;
+    }
+
+    if (!telefoneContato.trim()) {
+      alert('Por favor, preencha o campo Telefone do Contato antes de importar a planilha');
+      return;
+    }
+
+    if (!dataCotacao.trim()) {
+      alert('Por favor, preencha o campo Data da Cotação antes de importar a planilha');
       return;
     }
 
@@ -183,7 +201,7 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
       
       const convertedData = rawData.map(row => {
         console.log('Linha original:', row);
-        const converted = convertSpreadsheetRowToCotacao(row, shopNo || 'IMPORTED');
+        const converted = convertSpreadsheetRowToCotacao(row, shopNo || 'IMPORTED', nomeContato, telefoneContato, dataCotacao);
         console.log('Linha convertida:', converted);
         return converted;
       });
@@ -386,6 +404,56 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   Este número será aplicado a todos os itens importados desta planilha
+                </p>
+              </div>
+
+              {/* Campos de Contato */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label htmlFor="nomeContato" className="block text-sm font-medium text-gray-700 mb-2">
+                    Nome do Contato <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="nomeContato"
+                    type="text"
+                    value={nomeContato}
+                    onChange={(e) => setNomeContato(e.target.value)}
+                    placeholder="Digite o nome do contato"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="telefoneContato" className="block text-sm font-medium text-gray-700 mb-2">
+                    Telefone do Contato <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="telefoneContato"
+                    type="tel"
+                    value={telefoneContato}
+                    onChange={(e) => setTelefoneContato(e.target.value)}
+                    placeholder="Digite o telefone do contato"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Campo Data da Cotação */}
+              <div className="mb-6">
+                <label htmlFor="dataCotacao" className="block text-sm font-medium text-gray-700 mb-2">
+                  Data da Cotação <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="dataCotacao"
+                  type="date"
+                  value={dataCotacao}
+                  onChange={(e) => setDataCotacao(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Esta data será usada como NUM_COTACAO para todos os itens importados
                 </p>
               </div>
 

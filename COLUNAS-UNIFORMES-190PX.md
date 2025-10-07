@@ -327,3 +327,4 @@ className="table-cell text-right border-r border-gray-200 w-[190px]"
 **Acesse**: http://localhost:3000 e veja o novo layout uniforme.
 
 **Tabela com colunas uniformes de 190px - layout consistente e profissional! ✨**
+

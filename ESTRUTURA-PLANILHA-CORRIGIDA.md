@@ -214,3 +214,4 @@ Primeiro header: COTAÇÃO DE PRODUTOS - EXEMPLO Tipo: string
 **Acesse**: http://localhost:3000 e teste a importação com a estrutura correta.
 
 **Estrutura da planilha corrigida - linha 3 como cabeçalhos funcionando! ✨**
+

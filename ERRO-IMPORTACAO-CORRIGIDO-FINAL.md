@@ -142,3 +142,4 @@ T608,Carrinho de carga,拉杆车,...
 **Acesse**: http://localhost:3000 e teste a importação com os arquivos de exemplo corrigidos.
 
 **Erro de mapeamento resolvido - importação funcionando perfeitamente! ✨**
+

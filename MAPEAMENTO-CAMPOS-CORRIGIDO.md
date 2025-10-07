@@ -173,3 +173,4 @@ Mapeando campo: Peso Unitário(g) -> pesoUnitario, valor: 2900
 **Acesse**: http://localhost:3000 e teste a importação com os arquivos de exemplo.
 
 **Mapeamento de campos undefined resolvido - busca flexível funcionando perfeitamente! ✨**
+

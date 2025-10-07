@@ -231,3 +231,4 @@ const handleUpdateItem = (item: CotacaoItem, field: keyof CotacaoItem, value: st
 **Acesse**: http://localhost:3000 e teste a edição dos novos campos.
 
 **Campos SHOP NO e NUM COTACAO editáveis - duplo clique para editar! ✨**
+

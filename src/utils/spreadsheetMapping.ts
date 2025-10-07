@@ -237,7 +237,10 @@ const findFieldInRow = (row: SpreadsheetRow, targetField: string): any => {
 // Função para converter uma linha da planilha para o formato do sistema
 export const convertSpreadsheetRowToCotacao = (
   row: SpreadsheetRow, 
-  shopNo: string = 'IMPORTED'
+  shopNo: string = 'IMPORTED',
+  nomeContato: string = '',
+  telefoneContato: string = '',
+  dataCotacao: string = ''
 ): import('../types').CotacaoItem => {
   // Primeiro, obter o REF para gerar NUM_COTACAO
   const ref = findFieldInRow(row, 'REF')?.trim() || 'UNKNOWN';
@@ -249,10 +252,13 @@ export const convertSpreadsheetRowToCotacao = (
   
   const cotacaoItem: any = {
     SHOP_NO: shopNo,
-    NUM_COTACAO: generateNumCotacao(ref),
+    NUM_COTACAO: dataCotacao || generateNumCotacao(ref),
     MOQ: SYSTEM_FIELDS.MOQ,
     photo: '',
     OBSERVATIONS_EXTRA: SYSTEM_FIELDS.OBSERVATIONS_EXTRA,
+    nomeContato: nomeContato,
+    telefoneContato: telefoneContato,
+    dataCotacao: dataCotacao,
     // Campos de peso com valores padrão
     gw: 0,
     tgw: 0,

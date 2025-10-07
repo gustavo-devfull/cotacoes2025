@@ -115,3 +115,4 @@ export const getImageUrl = (photoNo: string, config = appConfig) => {
   // Modo produção - adapte conforme seu sistema
   return `${config.images.baseUrl}/${photoNo}.jpg`;
 };
+

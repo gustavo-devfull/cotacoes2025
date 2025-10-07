@@ -344,3 +344,4 @@ const calculateDependentFields = (updatedItem: CotacaoItem): CotacaoItem => {
 **Acesse**: http://localhost:3000 e teste editando os campos dependentes.
 
 **Fórmulas automáticas ativas - edite CTNS, UNIT/CTN, U.PRICE RMB, dimensões e pesos! ✨**
+

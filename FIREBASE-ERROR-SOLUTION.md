@@ -175,3 +175,4 @@ service cloud.firestore {
 **Configure as regras Firebase e os comentários funcionarão imediatamente! 🔥**
 
 **Sistema pronto para uso completo! ✨**
+

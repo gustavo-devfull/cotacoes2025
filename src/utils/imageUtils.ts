@@ -65,3 +65,4 @@ export const validateFileType = (file: File): boolean => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   return allowedTypes.includes(file.type);
 };
+

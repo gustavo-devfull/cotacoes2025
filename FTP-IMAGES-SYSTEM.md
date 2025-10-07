@@ -207,3 +207,4 @@ src/components/CotacoesTable.tsx - Componente ProductImage
 4. **Adicionar** mais extensões se necessário
 
 **Sistema pronto para carregar imagens reais dos produtos! ✨**
+

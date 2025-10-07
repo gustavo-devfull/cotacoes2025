@@ -320,3 +320,4 @@ interface EditableCellProps {
 **Acesse**: http://localhost:3000 e teste a edição de todos os campos.
 
 **Todos os campos editáveis implementados - duplo clique para editar qualquer campo! ✨**
+

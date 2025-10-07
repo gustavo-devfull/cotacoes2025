@@ -281,3 +281,4 @@ curl http://localhost:3002/api/test-ftp
 **Os comentários agora estão configurados para modo online! 🔥**
 
 **Sistema funcionando com Firebase + FTP! ✨**
+

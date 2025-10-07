@@ -346,3 +346,4 @@ curl http://localhost:3002/api/list-ftp
 **O sistema de upload FTP está funcionando perfeitamente! 🎉**
 
 **Imagens agora são salvas no servidor FTP real com URLs públicas! ✨**
+

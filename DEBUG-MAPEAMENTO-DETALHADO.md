@@ -148,3 +148,4 @@ REF encontrado: UNKNOWN
 **Acesse**: http://localhost:3000 e teste a importação para ver os logs detalhados.
 
 **Debug implementado - aguardando testes para identificar a causa raiz! ✨**
+

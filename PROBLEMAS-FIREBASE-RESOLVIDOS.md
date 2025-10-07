@@ -336,3 +336,4 @@ const addComment = async (productId: string, message: string, images: string[], 
 **Sistema de comentários com imagens funcionando perfeitamente! 🎉**
 
 **Configure as regras do Firebase e teste o sistema completo! ✨**
+

@@ -170,3 +170,4 @@ if (error instanceof Error && error.message.includes('permissions')) {
 **Erro de permissões do Firebase - solução implementada e documentada! 🎉**
 
 **Configure as regras do Firestore para habilitar a sincronização na nuvem! ✨**
+

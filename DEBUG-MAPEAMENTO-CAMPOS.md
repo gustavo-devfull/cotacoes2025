@@ -99,3 +99,4 @@ O sistema agora tem logs detalhados que vão mostrar exatamente:
 - ✅ **Onde está o problema** na conversão
 
 **Teste agora e verifique os logs no console para identificar o problema! 🔍**
+

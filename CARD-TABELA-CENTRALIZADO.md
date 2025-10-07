@@ -264,3 +264,4 @@
 **Acesse**: http://localhost:3000 e veja o card da tabela centralizado.
 
 **Centralização perfeita - card de 1400px centralizado na tela! ✨**
+

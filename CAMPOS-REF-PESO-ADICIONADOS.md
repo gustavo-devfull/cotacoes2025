@@ -116,3 +116,4 @@ O sistema agora está **100% compatível** com a planilha "cotação (20250820)"
 - ✅ Validação de dados robusta
 
 **Sistema atualizado e funcionando perfeitamente! 🎉**
+

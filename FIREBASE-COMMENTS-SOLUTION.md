@@ -254,3 +254,4 @@ service cloud.firestore {
 **O sistema agora funciona perfeitamente, com ou sem Firebase! 🎉**
 
 **Os erros de permissão foram completamente resolvidos! ✨**
+

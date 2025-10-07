@@ -331,6 +331,8 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               <th className="table-cell text-right w-[100px] border-r border-gray-200">T.N.W</th>
               <th className="table-cell text-center w-[190px] border-r border-gray-200">PESO UNIT (kg)</th>
               <th className="table-cell text-left w-[400px] border-r border-gray-200">OBSERVATIONS EXTRA</th>
+              <th className="table-cell text-left w-[150px] border-r border-gray-200">NOME CONTATO</th>
+              <th className="table-cell text-left w-[150px] border-r border-gray-200">TELEFONE CONTATO</th>
               <th className="table-cell text-center w-[190px]">AÇÕES</th>
             </tr>
           </thead>
@@ -591,6 +593,36 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       lightbox.openLightbox(images, index, title);
                     }}
                   />
+                </td>
+                
+                {/* Nome do Contato */}
+                <td className="table-cell border-r border-gray-200 w-[150px]">
+                  {onUpdateItem ? (
+                    <EditableCell 
+                      value={item.nomeContato} 
+                      field="nomeContato" 
+                      item={item} 
+                      onUpdate={onUpdateItem}
+                      type="text"
+                    />
+                  ) : (
+                    item.nomeContato
+                  )}
+                </td>
+                
+                {/* Telefone do Contato */}
+                <td className="table-cell border-r border-gray-200 w-[150px]">
+                  {onUpdateItem ? (
+                    <EditableCell 
+                      value={item.telefoneContato} 
+                      field="telefoneContato" 
+                      item={item} 
+                      onUpdate={onUpdateItem}
+                      type="text"
+                    />
+                  ) : (
+                    item.telefoneContato
+                  )}
                 </td>
                 
                 {/* Ações */}

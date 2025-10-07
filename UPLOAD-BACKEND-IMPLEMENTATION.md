@@ -244,3 +244,4 @@ O sistema foi migrado do FTP para FormData porque:
 - ✅ **Performance**: Upload direto sem intermediários
 - ✅ **Flexibilidade**: Suporte a diferentes backends
 - ✅ **Manutenção**: Mais fácil de debugar e manter
+

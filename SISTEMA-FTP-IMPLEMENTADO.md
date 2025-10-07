@@ -257,3 +257,4 @@ Firebase → URLs → Carregamento das imagens do FTP
 **Sistema de upload FTP implementado com sucesso! 🎉**
 
 **Teste o sistema completo de comentários com upload de imagens via FTP! ✨**
+

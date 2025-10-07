@@ -376,3 +376,4 @@ const unsubscribe = subscribeToCotacoes((cotacoes: CotacaoDocument[]) => {
 **Acesse**: http://localhost:3000 e teste a integração com Firebase.
 
 **Firebase integrado - dados persistidos na nuvem com sincronização em tempo real! ✨**
+

@@ -271,3 +271,4 @@
 **Acesse**: http://localhost:3000 e veja o card da tabela com mais espaço.
 
 **Tabela destacada com 1400px - mais espaço para visualizar os produtos! ✨**
+

@@ -120,3 +120,4 @@ curl -I https://gpreto.space/images/products/CHDJ25001.jpg
 4. **Validar** estados visuais
 
 **Sistema totalmente funcional e pronto para uso! 🚀**
+

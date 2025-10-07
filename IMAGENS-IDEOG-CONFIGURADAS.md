@@ -179,3 +179,4 @@ server: hcdn
 4. **Validar** performance geral
 
 **Sistema de imagens totalmente operacional! ✨**
+

@@ -146,3 +146,4 @@ T608,Carrinho de carga,拉杆车,...
 **Acesse**: http://localhost:3000 e teste a importação com os arquivos de exemplo atualizados.
 
 **NUM_COTACAO será gerado automaticamente e poderá ser editado depois! ✨**
+

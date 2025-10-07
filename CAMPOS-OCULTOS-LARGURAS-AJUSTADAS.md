@@ -317,3 +317,4 @@
 **Acesse**: http://localhost:3000 e veja a tabela otimizada.
 
 **Interface limpa e eficiente - campos essenciais em destaque! ✨**
+

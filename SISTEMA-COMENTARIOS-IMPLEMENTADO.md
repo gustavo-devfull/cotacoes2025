@@ -297,3 +297,4 @@ export interface User {
 **Acesse**: http://localhost:3000 e teste o sistema de comentários.
 
 **Comunicação eficiente - comentários com imagens por produto! ✨**
+

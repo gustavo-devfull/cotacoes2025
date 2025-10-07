@@ -29,6 +29,9 @@ export interface CotacaoItem {
   tnw: number;
   pesoUnitario: number;
   OBSERVATIONS_EXTRA: string;
+  nomeContato: string;
+  telefoneContato: string;
+  dataCotacao: string;
 }
 
 export interface SummaryStats {

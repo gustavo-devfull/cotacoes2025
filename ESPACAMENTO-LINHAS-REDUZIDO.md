@@ -183,3 +183,4 @@
 **Acesse**: http://localhost:3000 e veja a tabela com linhas mais compactas.
 
 **Layout otimizado - mais produtos visíveis na tela! ✨**
+

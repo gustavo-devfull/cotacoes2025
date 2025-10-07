@@ -66,3 +66,4 @@ curl http://localhost:3002/api/test-ftp
 - **Logs**: Verificar console do navegador (F12)
 
 **Configure as regras Firebase para resolver o erro! 🔧**
+
