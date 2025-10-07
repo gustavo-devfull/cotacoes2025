@@ -378,7 +378,7 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Design Responsivo</h3>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Imagens clicáveis</h3>
               <p className="text-xs text-gray-500">
                 Interface otimizada para desktop, tablet e dispositivos móveis
               </p>

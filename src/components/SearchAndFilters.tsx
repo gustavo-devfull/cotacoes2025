@@ -30,7 +30,8 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
         item.PHOTO_NO.toLowerCase().includes(searchTerm) ||
         item.description.toLowerCase().includes(searchTerm) ||
         item.name.toLowerCase().includes(searchTerm) ||
-        item.SHOP_NO.toLowerCase().includes(searchTerm)
+        item.SHOP_NO.toLowerCase().includes(searchTerm) ||
+        item.obs.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -75,7 +76,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
             <input
               type="text"
-              placeholder="Buscar por NUM COTAÇÃO, REF, PHOTO NO, descrição, nome ou loja..."
+              placeholder="Buscar por NUM COTAÇÃO, REF, PHOTO NO, descrição, nome, loja ou OBS..."
               className="input-field pl-10"
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange({ searchTerm: e.target.value })}

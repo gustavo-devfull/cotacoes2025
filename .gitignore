@@ -106,3 +106,4 @@ teste_*.csv
 # Remove if you want to keep all docs
 # *.md
 # !README.md
+.vercel

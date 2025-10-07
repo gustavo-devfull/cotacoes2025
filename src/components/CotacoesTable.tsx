@@ -1,6 +1,6 @@
 import React from 'react';
 import { CotacaoItem, Comment, User } from '../types';
-import { Eye, Loader2 } from 'lucide-react';
+import { Eye, Loader2, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import CommentsComponent from './CommentsComponent';
 import { ftpImageService } from '../services/ftpImageService';
 
@@ -72,9 +72,7 @@ const ProductImage: React.FC<{
       <img
         src={imageUrl}
         alt={description}
-        className={`w-20 h-20 object-cover rounded-lg border border-gray-200 transition-all duration-200 cursor-pointer hover:opacity-80 hover:scale-105 ${
-          imageLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
+        className="w-20 h-20 object-cover rounded-lg border border-gray-200 transition-all duration-200 cursor-pointer hover:opacity-80 hover:scale-105 opacity-100"
         onLoad={() => setImageLoaded(true)}
         onError={() => {
           setImageError(true);
@@ -220,6 +218,37 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
   onAddComment,
   lightbox
 }) => {
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToStart = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollToEnd = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        left: scrollContainerRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollToPhoto = () => {
+    if (scrollContainerRef.current) {
+      // Calcular a posição aproximada da coluna PHOTO
+      // SHOP NO (190px) + NUM COTAÇÃO (190px) + REF (190px) + DESCRIPTION (190px) + OBS (400px) + MOQ (100px) = 1260px
+      const photoColumnPosition = 1260;
+      scrollContainerRef.current.scrollTo({
+        left: photoColumnPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
   if (isLoading) {
     return (
       <div className="card p-8 text-center">
@@ -241,9 +270,42 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
 
   return (
     <div className="card overflow-hidden w-[1400px] mx-auto">
-      <div className="overflow-x-auto">
+      {/* Botões de scroll horizontal */}
+      <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-200">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={scrollToStart}
+            className="btn-scroll flex items-center gap-2 text-sm"
+            title="Rolar para a primeira coluna"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Início
+          </button>
+          <button
+            onClick={scrollToPhoto}
+            className="btn-scroll flex items-center gap-2 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100"
+            title="Rolar para a coluna PHOTO"
+          >
+            <Camera className="w-4 h-4" />
+            PHOTO
+          </button>
+          <button
+            onClick={scrollToEnd}
+            className="btn-scroll flex items-center gap-2 text-sm"
+            title="Rolar para a última coluna"
+          >
+            Fim
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="text-sm text-gray-600">
+          {data.length} produto{data.length !== 1 ? 's' : ''}
+        </div>
+      </div>
+      
+      <div ref={scrollContainerRef} className="overflow-x-auto max-h-[600px] overflow-y-auto">
         <table className="w-full table-fixed">
-          <thead className="table-header">
+          <thead className="table-header sticky top-0 z-20 bg-white shadow-sm">
             <tr>
               <th className="table-cell text-left w-[190px] border-r border-gray-200">SHOP NO</th>
               <th className="table-cell text-left w-[190px] border-r border-gray-200">NUM COTAÇÃO</th>
