@@ -3,6 +3,7 @@ import { CotacaoItem, Comment, User } from '../types';
 import { Eye, Loader2, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import CommentsComponent from './CommentsComponent';
 import { ftpImageService } from '../services/ftpImageService';
+import { formatDateToBrazilian } from '../utils/dateUtils';
 
 // Componente para exibir imagem do produto
 const ProductImage: React.FC<{ 
@@ -355,14 +356,14 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                 <td className="table-cell font-medium text-purple-600 border-r border-gray-200 w-[190px]">
                   {onUpdateItem ? (
                     <EditableCell 
-                      value={item.NUM_COTACAO} 
+                      value={formatDateToBrazilian(item.NUM_COTACAO)} 
                       field="NUM_COTACAO" 
                       item={item} 
                       onUpdate={onUpdateItem}
                       type="text"
                     />
                   ) : (
-                    item.NUM_COTACAO
+                    formatDateToBrazilian(item.NUM_COTACAO)
                   )}
                 </td>
                 <td className="table-cell font-medium text-blue-600 border-r border-gray-200 w-[190px]">

@@ -10,7 +10,8 @@ import Lightbox from './Lightbox';
 import { useComments } from '../hooks/useComments';
 import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
-import { BarChart3, TrendingUp, Package, Upload, Database, Cloud, Camera, Edit3 } from 'lucide-react';
+import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3 } from 'lucide-react';
+import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { 
   getCotacoes, 
   updateCotacao, 
@@ -32,7 +33,7 @@ const Dashboard: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<CotacaoItem | null>(null);
   
   // Hooks para comentários e usuário
-  const { comments, addComment, isOfflineMode: commentsOfflineMode, firebaseError } = useComments();
+  const { comments, addComment, firebaseError } = useComments();
   const { currentUser } = useUser();
   const lightbox = useLightbox();
 
@@ -278,55 +279,14 @@ const Dashboard: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Gerenciar Cotações</h1>
-                <p className="text-sm text-gray-600">Sistema Profissional de Gestão</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Status do Firebase */}
-              <div className="flex items-center gap-4">
-                {/* Status das Cotações */}
-                <div className="flex items-center gap-2">
-                  {isConnected ? (
-                    <div className="flex items-center gap-1 text-green-600">
-                      <Cloud className="w-4 h-4" />
-                      <span className="text-sm font-medium">Cotações Online</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 text-red-600">
-                      <Database className="w-4 h-4" />
-                      <span className="text-sm font-medium">Cotações Offline</span>
-                      <span className="text-xs text-red-500 ml-1">(Configure regras Firebase)</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Status dos Comentários */}
-                <div className="flex items-center gap-2">
-                  {firebaseError ? (
-                    <div className="flex items-center gap-1 text-red-600">
-                      <Database className="w-4 h-4" />
-                      <span className="text-sm font-medium">Erro Firebase</span>
-                      <span className="text-xs text-red-500 ml-1">(Configure regras Firebase)</span>
-                    </div>
-                  ) : commentsOfflineMode ? (
-                    <div className="flex items-center gap-1 text-yellow-600">
-                      <Database className="w-4 h-4" />
-                      <span className="text-sm font-medium">Comentários Offline</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 text-green-600">
-                      <Cloud className="w-4 h-4" />
-                      <span className="text-sm font-medium">Comentários Online</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="btn-primary flex items-center gap-2"
+                  className="btn-primary flex items-center gap-2 px-3 py-1.5 text-sm"
                   disabled={isLoading}
                 >
                   <Upload className="w-4 h-4" />
@@ -335,7 +295,7 @@ const Dashboard: React.FC = () => {
                 
                 <button
                   onClick={() => window.open('https://upload-imagens.onrender.com/', '_blank')}
-                  className="btn-secondary flex items-center gap-2"
+                  className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
                 >
                   <Camera className="w-4 h-4" />
                   Imagens
@@ -343,7 +303,7 @@ const Dashboard: React.FC = () => {
                 
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="btn-secondary flex items-center gap-2"
+                  className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
                   disabled={isLoading || filteredData.length === 0}
                 >
                   <Edit3 className="w-4 h-4" />
@@ -530,7 +490,7 @@ const Dashboard: React.FC = () => {
               Sistema de Gerenciamento de Cotações
             </div>
             <div className="text-sm text-gray-600">
-              Última atualização: {new Date().toLocaleString('pt-BR')}
+              Última atualização: {formatDateTimeToBrazilian(new Date().toISOString())}
             </div>
           </div>
         </div>

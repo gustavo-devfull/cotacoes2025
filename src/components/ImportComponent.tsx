@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, X, Download } from 'lucide-react';
 import { CotacaoItem } from '../types';
 import { convertSpreadsheetRowToCotacao, validateImportedData, SpreadsheetRow } from '../utils/spreadsheetMapping';
+import { formatDateToBrazilian } from '../utils/dateUtils';
 
 interface ImportComponentProps {
   onImportComplete: (data: CotacaoItem[]) => void;
@@ -436,7 +437,9 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                   id="dataCotacao"
                   type="date"
                   value={dataCotacao}
-                  onChange={(e) => setDataCotacao(e.target.value)}
+                  onChange={(e) => {
+                    setDataCotacao(e.target.value);
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 />

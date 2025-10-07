@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CotacaoItem, FilterOptions } from '../types';
 import { Search, Filter, X } from 'lucide-react';
+import { formatDateFromBrazilian, formatDateToBrazilian } from '../utils/dateUtils';
 
 interface SearchAndFiltersProps {
   data: CotacaoItem[];
@@ -16,9 +17,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
     dateRangeEnd: ''
   });
 
-  const handleFilterChange = (newFilters: Partial<FilterOptions>) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
+  const applyFilters = (updatedFilters: FilterOptions) => {
 
     // Aplicar filtros
     let filteredData = data;
@@ -84,10 +83,17 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
       dateRangeEnd: ''
     };
     setFilters(clearedFilters);
-    onFilterChange(data);
+    applyFilters(clearedFilters);
   };
 
-  const hasActiveFilters = filters.searchTerm || filters.shopFilter || filters.segmentoFilter || filters.dateRangeStart || filters.dateRangeEnd;
+  // Verificar se há filtros ativos
+  const hasActiveFilters = Boolean(
+    filters.searchTerm || 
+    filters.shopFilter || 
+    filters.segmentoFilter || 
+    filters.dateRangeStart || 
+    filters.dateRangeEnd
+  );
 
   // Obter lojas únicas para o dropdown
   const uniqueShops = Array.from(new Set(data.map(item => item.SHOP_NO)));
@@ -107,7 +113,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
               placeholder="Buscar por NUM COTAÇÃO, REF, descrição, nome, loja ou OBS..."
               className="input-field pl-10"
               value={filters.searchTerm}
-              onChange={(e) => handleFilterChange({ searchTerm: e.target.value })}
+              onChange={(e) => applyFilters({ ...filters, searchTerm: e.target.value })}
             />
           </div>
         </div>
@@ -117,7 +123,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
           <select
             className="input-field"
             value={filters.shopFilter}
-            onChange={(e) => handleFilterChange({ shopFilter: e.target.value })}
+            onChange={(e) => applyFilters({ ...filters, shopFilter: e.target.value })}
           >
             <option value="">Todas as Lojas</option>
             {uniqueShops.map(shop => (
@@ -131,7 +137,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
           <select
             className="input-field"
             value={filters.segmentoFilter}
-            onChange={(e) => handleFilterChange({ segmentoFilter: e.target.value })}
+            onChange={(e) => applyFilters({ ...filters, segmentoFilter: e.target.value })}
           >
             <option value="">Todos os Segmentos</option>
             {uniqueSegmentos.map(segmento => (
@@ -147,7 +153,11 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
             placeholder="Data Inicial"
             className="input-field"
             value={filters.dateRangeStart}
-            onChange={(e) => handleFilterChange({ dateRangeStart: e.target.value })}
+            onChange={(e) => {
+              const newFilters = { ...filters, dateRangeStart: e.target.value };
+              setFilters(newFilters);
+              applyFilters(newFilters);
+            }}
           />
         </div>
 
@@ -157,7 +167,11 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
             placeholder="Data Final"
             className="input-field"
             value={filters.dateRangeEnd}
-            onChange={(e) => handleFilterChange({ dateRangeEnd: e.target.value })}
+            onChange={(e) => {
+              const newFilters = { ...filters, dateRangeEnd: e.target.value };
+              setFilters(newFilters);
+              applyFilters(newFilters);
+            }}
           />
         </div>
 
@@ -195,12 +209,12 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
           )}
           {filters.dateRangeStart && (
             <span className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">
-              De: {filters.dateRangeStart}
+              De: {formatDateToBrazilian(filters.dateRangeStart)}
             </span>
           )}
           {filters.dateRangeEnd && (
             <span className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">
-              Até: {filters.dateRangeEnd}
+              Até: {formatDateToBrazilian(filters.dateRangeEnd)}
             </span>
           )}
         </div>
