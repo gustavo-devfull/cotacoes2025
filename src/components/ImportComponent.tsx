@@ -8,10 +8,13 @@ interface ImportComponentProps {
   onClose: () => void;
 }
 
+type ImportType = 'standard' | 'line2-headers';
+
 const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onClose }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [shopNo, setShopNo] = useState<string>('');
+  const [importType, setImportType] = useState<ImportType>('standard');
   const [importResult, setImportResult] = useState<{
     total: number;
     valid: number;
@@ -51,21 +54,57 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
         const Papa = await import('papaparse');
         const text = await file.text();
         
-        Papa.parse(text, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            // Estrutura CSV: Linha 1 (título), Linha 2 (vazia), Linha 3 (cabeçalhos), Linha 4+ (dados)
-            // O Papa.parse com header: true usa a primeira linha não vazia como cabeçalho
-            // Como temos título na linha 1 e linha vazia na linha 2, a linha 3 será usada como cabeçalho
-            rawData = results.data as SpreadsheetRow[];
-            console.log('Dados CSV após processamento:', rawData);
-            console.log('Cabeçalhos disponíveis:', Object.keys(rawData[0] || {}));
-          },
-          error: (error: any) => {
-            throw new Error(`Erro ao processar CSV: ${error.message}`);
-          }
-        });
+        if (importType === 'standard') {
+          // Importação padrão: Linha 1 (título), Linha 2 (vazia), Linha 3 (cabeçalhos), Linha 4+ (dados)
+          Papa.parse(text, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              rawData = results.data as SpreadsheetRow[];
+              console.log('Dados CSV após processamento padrão:', rawData);
+              console.log('Cabeçalhos disponíveis:', Object.keys(rawData[0] || {}));
+            },
+            error: (error: any) => {
+              throw new Error(`Erro ao processar CSV: ${error.message}`);
+            }
+          });
+        } else {
+          // Importação com cabeçalhos na linha 2: Linha 1 (título), Linha 2 (cabeçalhos), Linha 3+ (dados)
+          Papa.parse(text, {
+            header: false,
+            skipEmptyLines: false,
+            complete: (results) => {
+              const allRows = results.data as string[][];
+              if (allRows.length < 2) {
+                throw new Error('CSV deve ter pelo menos 2 linhas (título + cabeçalhos)');
+              }
+              
+              // Usar linha 2 (índice 1) como cabeçalhos
+              const headers = allRows[1];
+              const dataRows = allRows.slice(2); // Dados começam da linha 3
+              
+              console.log('Headers da linha 2:', headers);
+              console.log('Dados a partir da linha 3:', dataRows);
+              
+              // Converter para objetos com cabeçalhos corretos
+              rawData = dataRows.map(row => {
+                const obj: any = {};
+                headers.forEach((header, index) => {
+                  if (header && typeof header === 'string' && header.trim() !== '') {
+                    obj[header] = row[index];
+                  }
+                });
+                return obj;
+              });
+              
+              console.log('Dados CSV após processamento linha 2:', rawData);
+              console.log('Cabeçalhos disponíveis:', Object.keys(rawData[0] || {}));
+            },
+            error: (error: any) => {
+              throw new Error(`Erro ao processar CSV: ${error.message}`);
+            }
+          });
+        }
       } else {
         // Processar Excel
         const XLSX = await import('xlsx');
@@ -73,42 +112,68 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        // Converter para JSON com cabeçalhos personalizados
-        // Estrutura da planilha: Linha 1 (título), Linha 2 (vazia), Linha 3 (cabeçalhos), Linha 4+ (dados)
-        const allData = XLSX.utils.sheet_to_json(worksheet, { 
-          header: 1, // Usar números como cabeçalhos
-          range: 2 // Começar da linha 3 (índice 2) - onde estão os cabeçalhos
-        }) as any[][];
-        
-        if (allData.length < 2) {
-          throw new Error('Planilha Excel deve ter pelo menos 4 linhas (título + vazia + cabeçalho + dados)');
+        if (importType === 'standard') {
+          // Importação padrão: Linha 1 (título), Linha 2 (vazia), Linha 3 (cabeçalhos), Linha 4+ (dados)
+          const allData = XLSX.utils.sheet_to_json(worksheet, { 
+            header: 1, // Usar números como cabeçalhos
+            range: 2 // Começar da linha 3 (índice 2) - onde estão os cabeçalhos
+          }) as any[][];
+          
+          if (allData.length < 2) {
+            throw new Error('Planilha Excel deve ter pelo menos 4 linhas (título + vazia + cabeçalho + dados)');
+          }
+          
+          // Usar a primeira linha do resultado como cabeçalhos (que é a linha 3 da planilha)
+          const headers = allData[0];
+          const dataRows = allData.slice(1); // Dados começam da linha 4 da planilha
+          
+          console.log('Headers brutos (padrão):', headers);
+          
+          // Converter para objetos com cabeçalhos corretos
+          rawData = dataRows.map(row => {
+            const obj: any = {};
+            headers.forEach((header, index) => {
+              if (header && typeof header === 'string' && header.trim() !== '') {
+                obj[header] = row[index];
+              }
+            });
+            return obj;
+          });
+          
+          console.log('Dados Excel após processamento padrão:', rawData);
+        } else {
+          // Importação com cabeçalhos na linha 2: Linha 1 (título), Linha 2 (cabeçalhos), Linha 3+ (dados)
+          const allData = XLSX.utils.sheet_to_json(worksheet, { 
+            header: 1, // Usar números como cabeçalhos
+            range: 1 // Começar da linha 2 (índice 1) - onde estão os cabeçalhos
+          }) as any[][];
+          
+          if (allData.length < 2) {
+            throw new Error('Planilha Excel deve ter pelo menos 3 linhas (título + cabeçalho + dados)');
+          }
+          
+          // Usar a primeira linha do resultado como cabeçalhos (que é a linha 2 da planilha)
+          const headers = allData[0];
+          const dataRows = allData.slice(1); // Dados começam da linha 3 da planilha
+          
+          console.log('Headers da linha 2 (Excel):', headers);
+          console.log('Dados a partir da linha 3 (Excel):', dataRows);
+          
+          // Converter para objetos com cabeçalhos corretos
+          rawData = dataRows.map(row => {
+            const obj: any = {};
+            headers.forEach((header, index) => {
+              if (header && typeof header === 'string' && header.trim() !== '') {
+                obj[header] = row[index];
+              }
+            });
+            return obj;
+          });
+          
+          console.log('Dados Excel após processamento linha 2:', rawData);
         }
         
-        // Usar a primeira linha do resultado como cabeçalhos (que é a linha 3 da planilha)
-        const headers = allData[0];
-        const dataRows = allData.slice(1); // Dados começam da linha 4 da planilha
-        
-        console.log('Headers brutos:', headers);
-        console.log('Tipo dos headers:', typeof headers);
-        console.log('Headers é array?', Array.isArray(headers));
-        console.log('Primeiro header:', headers[0], 'Tipo:', typeof headers[0]);
-        
-        // Converter para objetos com cabeçalhos corretos
-        rawData = dataRows.map(row => {
-          const obj: any = {};
-          headers.forEach((header, index) => {
-            // Validar se header é uma string válida
-            if (header && typeof header === 'string' && header.trim() !== '') {
-              obj[header] = row[index];
-            }
-          });
-          return obj;
-        });
-        
-        console.log('Dados Excel após processamento correto:', rawData);
         console.log('Cabeçalhos disponíveis:', Object.keys(rawData[0] || {}));
-        console.log('Primeira linha de dados:', rawData[0]);
-        console.log('Estrutura completa da primeira linha:', JSON.stringify(rawData[0], null, 2));
       }
 
       // Converter dados para formato do sistema
@@ -257,12 +322,51 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                   <ul className="text-sm text-blue-800 space-y-2">
                     <li>• Formatos suportados: CSV, Excel (.xlsx, .xls)</li>
                     <li>• A planilha deve conter as colunas conforme o modelo fornecido</li>
-                    <li>• <strong>Importante:</strong> Os dados serão lidos a partir da quarta linha (linhas 1-3 serão ignoradas)</li>
+                    <li>• <strong>Escolha o tipo de importação:</strong></li>
+                    <li className="ml-4">- <strong>Padrão:</strong> Linha 1 (título), Linha 2 (vazia), Linha 3 (cabeçalhos), Linha 4+ (dados)</li>
+                    <li className="ml-4">- <strong>Cabeçalhos na Linha 2:</strong> Linha 1 (título), Linha 2 (cabeçalhos), Linha 3+ (dados)</li>
                     <li>• <strong>NUM_COTACAO:</strong> Será gerado automaticamente baseado no REF e poderá ser editado depois</li>
                     <li>• Campos obrigatórios: REF, DESCRIPTION, NAME, CTNS, UNIT/CTN, QTY, U.PRICE, UNIT, AMOUNT, L, W, H, CBM, CBM TOTAL, Peso Unitário(g)</li>
                     <li>• Campos opcionais: G.W, T.G.W, N.W, T.N.W</li>
                     <li>• O campo REF será usado como PHOTO_NO para buscar imagens</li>
                   </ul>
+                </div>
+              </div>
+
+              {/* Tipo de Importação */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Tipo de Importação <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <input
+                      id="standard"
+                      type="radio"
+                      name="importType"
+                      value="standard"
+                      checked={importType === 'standard'}
+                      onChange={(e) => setImportType(e.target.value as ImportType)}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                    />
+                    <label htmlFor="standard" className="ml-3 text-sm text-gray-700">
+                      <span className="font-medium">Padrão</span> - Linha 1 (título), Linha 2 (vazia), Linha 3 (cabeçalhos), Linha 4+ (dados)
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      id="line2-headers"
+                      type="radio"
+                      name="importType"
+                      value="line2-headers"
+                      checked={importType === 'line2-headers'}
+                      onChange={(e) => setImportType(e.target.value as ImportType)}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                    />
+                    <label htmlFor="line2-headers" className="ml-3 text-sm text-gray-700">
+                      <span className="font-medium">Cabeçalhos na Linha 2</span> - Linha 1 (título), Linha 2 (cabeçalhos), Linha 3+ (dados)
+                    </label>
+                  </div>
                 </div>
               </div>
 
