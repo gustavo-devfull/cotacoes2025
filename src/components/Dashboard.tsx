@@ -9,7 +9,7 @@ import Lightbox from './Lightbox';
 import { useComments } from '../hooks/useComments';
 import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
-import { BarChart3, TrendingUp, Package, Upload, Database, Cloud } from 'lucide-react';
+import { BarChart3, TrendingUp, Package, Upload, Database, Cloud, Camera } from 'lucide-react';
 import { 
   getCotacoes, 
   updateCotacao, 
@@ -276,23 +276,26 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="btn-primary flex items-center gap-2"
-                disabled={isLoading}
-              >
-                <Upload className="w-4 h-4" />
-                {isLoading ? 'Carregando...' : 'Importar Planilha'}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="btn-primary flex items-center gap-2"
+                  disabled={isLoading}
+                >
+                  <Upload className="w-4 h-4" />
+                  {isLoading ? 'Carregando...' : 'Importar Planilha'}
+                </button>
+                
+                <button
+                  onClick={() => window.open('https://upload-imagens.onrender.com/', '_blank')}
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  <Camera className="w-4 h-4" />
+                  Imagens
+                </button>
+              </div>
               
               <LoginComponent />
-              
-              <div className="text-right">
-                <p className="text-sm text-gray-600">Última atualização</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {new Date().toLocaleString('pt-BR')}
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -453,6 +456,20 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
+      
+      {/* Rodapé */}
+      <footer className="bg-gray-50 border-t border-gray-200 py-4 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              Sistema de Gerenciamento de Cotações
+            </div>
+            <div className="text-sm text-gray-600">
+              Última atualização: {new Date().toLocaleString('pt-BR')}
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
