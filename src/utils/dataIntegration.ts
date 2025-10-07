@@ -35,7 +35,10 @@ export const convertCSVToCotacaoData = (csvData: any[]): CotacaoItem[] => {
     nw: parseFloat(row['N.W']) || parseFloat(row['NW']) || 0,
     tnw: parseFloat(row['T.N.W']) || parseFloat(row['TNW']) || 0,
     pesoUnitario: parseFloat(row['Peso Unitário(g)']) || parseFloat(row['PESO_UNITARIO']) || 0,
-    OBSERVATIONS_EXTRA: row['OBSERVATIONS_EXTRA'] || ''
+    OBSERVATIONS_EXTRA: row['OBSERVATIONS_EXTRA'] || '',
+    nomeContato: row['nomeContato'] || row['NOME_CONTATO'] || '',
+    telefoneContato: row['telefoneContato'] || row['TELEFONE_CONTATO'] || '',
+    dataCotacao: row['dataCotacao'] || row['DATA_COTACAO'] || ''
   }));
 };
 
@@ -136,7 +139,8 @@ export const exportToCSV = (data: CotacaoItem[]): string => {
     'SHOP NO', 'NUM COTAÇÃO', 'REF', 'PHOTO NO', 'ITEM NO', 'DESCRIPTION', 'NAME',
     'REMARK', 'OBS', 'NCM', 'English Description', 'MOQ', 'CTNS', 'UNIT/CTN',
     'QTY', 'U.PRICE RMB', 'UNIT', 'AMOUNT', 'L', 'W', 'H', 'CBM', 'CBM TOTAL',
-    'G.W', 'T.G.W', 'N.W', 'T.N.W', 'Peso Unitário (kg)', 'OBSERVATIONS EXTRA'
+    'G.W', 'T.G.W', 'N.W', 'T.N.W', 'Peso Unitário (kg)', 'OBSERVATIONS EXTRA',
+    'NOME CONTATO', 'TELEFONE CONTATO', 'DATA COTAÇÃO'
   ];
 
   const csvContent = [
@@ -170,7 +174,10 @@ export const exportToCSV = (data: CotacaoItem[]): string => {
       item.nw,
       item.tnw,
       item.pesoUnitario,
-      item.OBSERVATIONS_EXTRA
+      item.OBSERVATIONS_EXTRA,
+      item.nomeContato,
+      item.telefoneContato,
+      item.dataCotacao
     ].join(','))
   ].join('\n');
 

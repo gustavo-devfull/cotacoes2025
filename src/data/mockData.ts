@@ -32,7 +32,10 @@ export const mockData: CotacaoItem[] = [
     nw: 17.40,
     tnw: 1461.60,
     pesoUnitario: 25,
-    OBSERVATIONS_EXTRA: "Embalagem individual com logo personalizado"
+    OBSERVATIONS_EXTRA: "Embalagem individual com logo personalizado",
+    nomeContato: "João Silva",
+    telefoneContato: "(11) 99999-9999",
+    dataCotacao: "2025-01-15"
   },
   {
     SHOP_NO: "SHOP002",
@@ -64,7 +67,10 @@ export const mockData: CotacaoItem[] = [
     nw: 20.40,
     tnw: 1713.60,
     pesoUnitario: 180,
-    OBSERVATIONS_EXTRA: "Caixa premium com carregador USB-C"
+    OBSERVATIONS_EXTRA: "Caixa premium com carregador USB-C",
+    nomeContato: "Maria Santos",
+    telefoneContato: "(11) 88888-8888",
+    dataCotacao: "2025-01-16"
   },
   {
     SHOP_NO: "SHOP001",
@@ -96,7 +102,10 @@ export const mockData: CotacaoItem[] = [
     nw: 18.50,
     tnw: 1554.00,
     pesoUnitario: 350,
-    OBSERVATIONS_EXTRA: "Cabo USB incluído, certificação CE"
+    OBSERVATIONS_EXTRA: "Cabo USB incluído, certificação CE",
+    nomeContato: "Pedro Costa",
+    telefoneContato: "(11) 77777-7777",
+    dataCotacao: "2025-01-17"
   },
   {
     SHOP_NO: "SHOP003",
@@ -128,7 +137,10 @@ export const mockData: CotacaoItem[] = [
     nw: 21.60,
     tnw: 1814.40,
     pesoUnitario: 1200,
-    OBSERVATIONS_EXTRA: "Base ajustável, controle de brilho"
+    OBSERVATIONS_EXTRA: "Base ajustável, controle de brilho",
+    nomeContato: "Ana Oliveira",
+    telefoneContato: "(11) 66666-6666",
+    dataCotacao: "2025-01-18"
   },
   {
     SHOP_NO: "SHOP002",
@@ -160,7 +172,10 @@ export const mockData: CotacaoItem[] = [
     nw: 15.30,
     tnw: 1285.20,
     pesoUnitario: 45,
-    OBSERVATIONS_EXTRA: "Pulseira esportiva incluída, app móvel"
+    OBSERVATIONS_EXTRA: "Pulseira esportiva incluída, app móvel",
+    nomeContato: "Carlos Ferreira",
+    telefoneContato: "(11) 55555-5555",
+    dataCotacao: "2025-01-19"
   }
 ];
 
