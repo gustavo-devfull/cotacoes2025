@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CotacaoItem, FilterOptions } from '../types';
 import { Search, Filter, X } from 'lucide-react';
 import { formatDateToBrazilian } from '../utils/dateUtils';
@@ -16,8 +16,25 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
     dateRangeStart: '',
     dateRangeEnd: ''
   });
+  
+  const [searchInput, setSearchInput] = useState('');
+
+  // Debounce para o campo de busca
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      applyFilters({ ...filters, searchTerm: searchInput });
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
+
+  // Aplicar filtros quando outros campos mudarem
+  useEffect(() => {
+    applyFilters(filters);
+  }, [filters.shopFilter, filters.segmentoFilter, filters.dateRangeStart, filters.dateRangeEnd]);
 
   const applyFilters = (updatedFilters: FilterOptions) => {
+    setFilters(updatedFilters);
 
     // Aplicar filtros
     let filteredData = data;
@@ -35,15 +52,15 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
       );
     }
 
-    // Filtro por loja
-    if (updatedFilters.shopFilter) {
+    // Filtro por loja - só aplica se houver seleção específica
+    if (updatedFilters.shopFilter && updatedFilters.shopFilter.trim() !== '') {
       filteredData = filteredData.filter(item =>
         item.SHOP_NO.toLowerCase().includes(updatedFilters.shopFilter.toLowerCase())
       );
     }
 
-    // Filtro por segmento
-    if (updatedFilters.segmentoFilter) {
+    // Filtro por segmento - só aplica se houver seleção específica
+    if (updatedFilters.segmentoFilter && updatedFilters.segmentoFilter.trim() !== '') {
       filteredData = filteredData.filter(item =>
         item.segmento.toLowerCase().includes(updatedFilters.segmentoFilter.toLowerCase())
       );
@@ -83,14 +100,16 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
       dateRangeEnd: ''
     };
     setFilters(clearedFilters);
+    setSearchInput('');
+    // Aplicar filtros limpos para mostrar todos os dados
     applyFilters(clearedFilters);
   };
 
   // Verificar se há filtros ativos
   const hasActiveFilters = Boolean(
-    filters.searchTerm || 
-    filters.shopFilter || 
-    filters.segmentoFilter || 
+    searchInput || 
+    (filters.shopFilter && filters.shopFilter.trim() !== '') || 
+    (filters.segmentoFilter && filters.segmentoFilter.trim() !== '') || 
     filters.dateRangeStart || 
     filters.dateRangeEnd
   );
@@ -112,8 +131,8 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
               type="text"
               placeholder="Buscar por NUM COTAÇÃO, REF, descrição, nome, loja ou OBS..."
               className="input-field pl-10"
-              value={filters.searchTerm}
-              onChange={(e) => applyFilters({ ...filters, searchTerm: e.target.value })}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
         </div>
@@ -123,10 +142,13 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
           <select
             className="input-field"
             value={filters.shopFilter}
-            onChange={(e) => applyFilters({ ...filters, shopFilter: e.target.value })}
+            onChange={(e) => {
+              const newFilters = { ...filters, shopFilter: e.target.value };
+              setFilters(newFilters);
+            }}
           >
-            <option value="">Todas as Lojas</option>
-            {uniqueShops.map(shop => (
+            <option value="">🏪 Todas as Lojas</option>
+            {uniqueShops.sort().map(shop => (
               <option key={shop} value={shop}>{shop}</option>
             ))}
           </select>
@@ -137,10 +159,13 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
           <select
             className="input-field"
             value={filters.segmentoFilter}
-            onChange={(e) => applyFilters({ ...filters, segmentoFilter: e.target.value })}
+            onChange={(e) => {
+              const newFilters = { ...filters, segmentoFilter: e.target.value };
+              setFilters(newFilters);
+            }}
           >
-            <option value="">Todos os Segmentos</option>
-            {uniqueSegmentos.map(segmento => (
+            <option value="">📊 Todos os Segmentos</option>
+            {uniqueSegmentos.sort().map(segmento => (
               <option key={segmento} value={segmento}>{segmento}</option>
             ))}
           </select>
@@ -156,7 +181,6 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
             onChange={(e) => {
               const newFilters = { ...filters, dateRangeStart: e.target.value };
               setFilters(newFilters);
-              applyFilters(newFilters);
             }}
           />
         </div>
@@ -170,7 +194,6 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
             onChange={(e) => {
               const newFilters = { ...filters, dateRangeEnd: e.target.value };
               setFilters(newFilters);
-              applyFilters(newFilters);
             }}
           />
         </div>
@@ -192,17 +215,17 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
         <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
           <Filter className="w-5 h-5" />
           <span>Filtros ativos:</span>
-          {filters.searchTerm && (
+          {searchInput && (
             <span className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">
-              Busca: "{filters.searchTerm}"
+              Busca: "{searchInput}"
             </span>
           )}
-          {filters.shopFilter && (
+          {filters.shopFilter && filters.shopFilter.trim() !== '' && (
             <span className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">
               Loja: {filters.shopFilter}
             </span>
           )}
-          {filters.segmentoFilter && (
+          {filters.segmentoFilter && filters.segmentoFilter.trim() !== '' && (
             <span className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">
               Segmento: {filters.segmentoFilter}
             </span>
