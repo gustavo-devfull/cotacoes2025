@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CotacaoItem, FilterOptions } from '../types';
 import { Search, Filter, X } from 'lucide-react';
-import { formatDateFromBrazilian, formatDateToBrazilian } from '../utils/dateUtils';
+import { formatDateToBrazilian } from '../utils/dateUtils';
 
 interface SearchAndFiltersProps {
   data: CotacaoItem[];

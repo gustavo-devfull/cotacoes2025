@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, X, Download } from 'lucide-react';
 import { CotacaoItem } from '../types';
 import { convertSpreadsheetRowToCotacao, validateImportedData, SpreadsheetRow } from '../utils/spreadsheetMapping';
-import { formatDateToBrazilian } from '../utils/dateUtils';
 
 interface ImportComponentProps {
   onImportComplete: (data: CotacaoItem[]) => void;
