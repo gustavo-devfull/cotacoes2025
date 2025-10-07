@@ -11,6 +11,7 @@ interface ImportComponentProps {
 const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onClose }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [shopNo, setShopNo] = useState<string>('');
   const [importResult, setImportResult] = useState<{
     total: number;
     valid: number;
@@ -27,6 +28,11 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
     
     if (!['csv', 'xlsx', 'xls'].includes(fileExtension || '')) {
       alert('Por favor, selecione um arquivo CSV ou Excel (.csv, .xlsx, .xls)');
+      return;
+    }
+
+    if (!shopNo.trim()) {
+      alert('Por favor, preencha o campo SHOP NO antes de importar a planilha');
       return;
     }
 
@@ -112,7 +118,7 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
       
       const convertedData = rawData.map(row => {
         console.log('Linha original:', row);
-        const converted = convertSpreadsheetRowToCotacao(row);
+        const converted = convertSpreadsheetRowToCotacao(row, shopNo || 'IMPORTED');
         console.log('Linha convertida:', converted);
         return converted;
       });
@@ -258,6 +264,25 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                     <li>• O campo REF será usado como PHOTO_NO para buscar imagens</li>
                   </ul>
                 </div>
+              </div>
+
+              {/* Campo SHOP NO */}
+              <div className="mb-6">
+                <label htmlFor="shopNo" className="block text-sm font-medium text-gray-700 mb-2">
+                  SHOP NO <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="shopNo"
+                  type="text"
+                  value={shopNo}
+                  onChange={(e) => setShopNo(e.target.value)}
+                  placeholder="Digite o número da loja"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Este número será aplicado a todos os itens importados desta planilha
+                </p>
               </div>
 
               {/* Download Template */}
