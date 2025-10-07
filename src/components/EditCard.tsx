@@ -131,7 +131,7 @@ const EditCard: React.FC<EditCardProps> = ({ data, onDeleteSelected, onClose }) 
         <div className="overflow-y-auto max-h-[400px]">
           <div className="p-6">
             <div className="space-y-3">
-              {data.map((item, index) => {
+              {data.map((item) => {
                 const itemId = `${item.PHOTO_NO}-${item.referencia}`;
                 const isSelected = selectedItems.has(itemId);
                 
