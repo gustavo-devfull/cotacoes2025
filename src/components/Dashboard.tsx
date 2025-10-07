@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { CotacaoItem, SummaryStats } from '../types';
-import { mockData, calculateSummaryStats } from '../data/mockData';
-import SummaryCards from './SummaryCards';
+import { CotacaoItem } from '../types';
+import { mockData } from '../data/mockData';
 import SearchAndFilters from './SearchAndFilters';
 import CotacoesTable from './CotacoesTable';
 import ImportComponent from './ImportComponent';
@@ -24,14 +23,11 @@ import {
 const Dashboard: React.FC = () => {
   const [allData, setAllData] = useState<CotacaoItem[]>([]);
   const [filteredData, setFilteredData] = useState<CotacaoItem[]>([]);
-  const [summaryStats, setSummaryStats] = useState<SummaryStats>({
-    totalItems: 0,
-    totalValue: 0,
-    totalCBM: 0
-  });
   const [showImportModal, setShowImportModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<CotacaoItem | null>(null);
   
   // Hooks para comentários e usuário
   const { comments, addComment, isOfflineMode: commentsOfflineMode, firebaseError } = useComments();
@@ -83,11 +79,6 @@ const Dashboard: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Calcular estatísticas quando os dados filtrados mudam
-  useEffect(() => {
-    const stats = calculateSummaryStats(filteredData);
-    setSummaryStats(stats);
-  }, [filteredData]);
 
   const handleFilterChange = (newFilteredData: CotacaoItem[]) => {
     setFilteredData(newFilteredData);
@@ -178,29 +169,39 @@ const Dashboard: React.FC = () => {
   };
 
   const handleDeleteItem = async (item: CotacaoItem) => {
-    // Confirmar exclusão
-    const confirmMessage = `Tem certeza que deseja excluir o produto "${item.description}" (REF: ${item.referencia})?`;
-    
-    if (window.confirm(confirmMessage)) {
-      try {
-        // Encontrar o documento no Firebase pelo PHOTO_NO e referencia
-        const cotacoes = await getCotacoes();
-        const cotacaoDoc = cotacoes.find(doc => 
-          doc.PHOTO_NO === item.PHOTO_NO && doc.referencia === item.referencia
-        );
+    setItemToDelete(item);
+    setShowDeleteModal(true);
+  };
 
-        if (cotacaoDoc) {
-          // Deletar do Firebase
-          await deleteCotacao(cotacaoDoc.id);
-          console.log('Item deletado do Firebase:', cotacaoDoc.id);
-        } else {
-          console.error('Documento não encontrado no Firebase para exclusão');
-        }
-      } catch (error) {
-        console.error('Erro ao deletar item do Firebase:', error);
-        alert('Erro ao deletar item. Verifique o console para mais detalhes.');
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      // Encontrar o documento no Firebase pelo PHOTO_NO e referencia
+      const cotacoes = await getCotacoes();
+      const cotacaoDoc = cotacoes.find(doc => 
+        doc.PHOTO_NO === itemToDelete.PHOTO_NO && doc.referencia === itemToDelete.referencia
+      );
+
+      if (cotacaoDoc) {
+        // Deletar do Firebase
+        await deleteCotacao(cotacaoDoc.id);
+        console.log('Item deletado do Firebase:', cotacaoDoc.id);
+      } else {
+        console.error('Documento não encontrado no Firebase para exclusão');
       }
+    } catch (error) {
+      console.error('Erro ao deletar item do Firebase:', error);
+      alert('Erro ao deletar item. Verifique o console para mais detalhes.');
+    } finally {
+      setShowDeleteModal(false);
+      setItemToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
   };
 
   const handleAddComment = async (productId: string, message: string, imageUrls: string[]) => {
@@ -298,7 +299,7 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
         {/* Banner de erro Firebase */}
         {firebaseError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -320,19 +321,10 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         )}
-        
-        {/* Cards de Resumo */}
-        <SummaryCards stats={summaryStats} />
-
-        {/* Busca e Filtros */}
-        <SearchAndFilters 
-          data={allData} 
-          onFilterChange={handleFilterChange} 
-        />
       </main>
 
       {/* Tabela de Cotações - Fora do container principal para centralização perfeita */}
-      <div className="mb-6">
+      <div className="mb-2">
         <div className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -349,6 +341,12 @@ const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
+          
+          {/* Busca e Filtros */}
+          <SearchAndFilters 
+            data={allData} 
+            onFilterChange={handleFilterChange} 
+          />
         </div>
         
             <CotacoesTable
@@ -420,6 +418,41 @@ const Dashboard: React.FC = () => {
         onNavigate={lightbox.navigateTo}
         title={lightbox.title}
       />
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && itemToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Package className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Confirmar Exclusão
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Tem certeza que deseja excluir o produto <strong>"{itemToDelete.description}"</strong> (REF: <strong>{itemToDelete.referencia}</strong>)?
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelDelete}
+                className="btn-secondary"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
