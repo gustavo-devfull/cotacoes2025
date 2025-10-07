@@ -38,7 +38,8 @@ export const convertCSVToCotacaoData = (csvData: any[]): CotacaoItem[] => {
     OBSERVATIONS_EXTRA: row['OBSERVATIONS_EXTRA'] || '',
     nomeContato: row['nomeContato'] || row['NOME_CONTATO'] || '',
     telefoneContato: row['telefoneContato'] || row['TELEFONE_CONTATO'] || '',
-    dataCotacao: row['dataCotacao'] || row['DATA_COTACAO'] || ''
+    dataCotacao: row['dataCotacao'] || row['DATA_COTACAO'] || '',
+    segmento: row['segmento'] || row['SEGMENTO'] || ''
   }));
 };
 
@@ -140,7 +141,7 @@ export const exportToCSV = (data: CotacaoItem[]): string => {
     'REMARK', 'OBS', 'NCM', 'English Description', 'MOQ', 'CTNS', 'UNIT/CTN',
     'QTY', 'U.PRICE RMB', 'UNIT', 'AMOUNT', 'L', 'W', 'H', 'CBM', 'CBM TOTAL',
     'G.W', 'T.G.W', 'N.W', 'T.N.W', 'Peso Unitário (kg)', 'OBSERVATIONS EXTRA',
-    'NOME CONTATO', 'TELEFONE CONTATO', 'DATA COTAÇÃO'
+    'NOME CONTATO', 'TELEFONE CONTATO', 'DATA COTAÇÃO', 'SEGMENTO'
   ];
 
   const csvContent = [
@@ -177,7 +178,8 @@ export const exportToCSV = (data: CotacaoItem[]): string => {
       item.OBSERVATIONS_EXTRA,
       item.nomeContato,
       item.telefoneContato,
-      item.dataCotacao
+      item.dataCotacao,
+      item.segmento
     ].join(','))
   ].join('\n');
 

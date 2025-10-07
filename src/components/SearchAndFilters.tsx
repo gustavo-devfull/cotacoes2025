@@ -11,7 +11,9 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
   const [filters, setFilters] = useState<FilterOptions>({
     searchTerm: '',
     shopFilter: '',
-    photoNoFilter: ''
+    segmentoFilter: '',
+    dateRangeStart: '',
+    dateRangeEnd: ''
   });
 
   const handleFilterChange = (newFilters: Partial<FilterOptions>) => {
@@ -27,7 +29,6 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
       filteredData = filteredData.filter(item =>
         item.NUM_COTACAO.toLowerCase().includes(searchTerm) ||
         item.referencia.toLowerCase().includes(searchTerm) ||
-        item.PHOTO_NO.toLowerCase().includes(searchTerm) ||
         item.description.toLowerCase().includes(searchTerm) ||
         item.name.toLowerCase().includes(searchTerm) ||
         item.SHOP_NO.toLowerCase().includes(searchTerm) ||
@@ -42,11 +43,33 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
       );
     }
 
-    // Filtro por PHOTO NO
-    if (updatedFilters.photoNoFilter) {
+    // Filtro por segmento
+    if (updatedFilters.segmentoFilter) {
       filteredData = filteredData.filter(item =>
-        item.PHOTO_NO.toLowerCase().includes(updatedFilters.photoNoFilter.toLowerCase())
+        item.segmento.toLowerCase().includes(updatedFilters.segmentoFilter.toLowerCase())
       );
+    }
+
+    // Filtro por período de datas
+    if (updatedFilters.dateRangeStart && updatedFilters.dateRangeEnd) {
+      filteredData = filteredData.filter(item => {
+        const itemDate = new Date(item.dataCotacao);
+        const startDate = new Date(updatedFilters.dateRangeStart);
+        const endDate = new Date(updatedFilters.dateRangeEnd);
+        return itemDate >= startDate && itemDate <= endDate;
+      });
+    } else if (updatedFilters.dateRangeStart) {
+      filteredData = filteredData.filter(item => {
+        const itemDate = new Date(item.dataCotacao);
+        const startDate = new Date(updatedFilters.dateRangeStart);
+        return itemDate >= startDate;
+      });
+    } else if (updatedFilters.dateRangeEnd) {
+      filteredData = filteredData.filter(item => {
+        const itemDate = new Date(item.dataCotacao);
+        const endDate = new Date(updatedFilters.dateRangeEnd);
+        return itemDate <= endDate;
+      });
     }
 
     onFilterChange(filteredData);
@@ -56,16 +79,21 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
     const clearedFilters = {
       searchTerm: '',
       shopFilter: '',
-      photoNoFilter: ''
+      segmentoFilter: '',
+      dateRangeStart: '',
+      dateRangeEnd: ''
     };
     setFilters(clearedFilters);
     onFilterChange(data);
   };
 
-  const hasActiveFilters = filters.searchTerm || filters.shopFilter || filters.photoNoFilter;
+  const hasActiveFilters = filters.searchTerm || filters.shopFilter || filters.segmentoFilter || filters.dateRangeStart || filters.dateRangeEnd;
 
   // Obter lojas únicas para o dropdown
   const uniqueShops = Array.from(new Set(data.map(item => item.SHOP_NO)));
+  
+  // Obter segmentos únicos para o dropdown
+  const uniqueSegmentos = Array.from(new Set(data.map(item => item.segmento)));
 
   return (
     <div className="card p-6 mb-6">
@@ -76,7 +104,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
             <input
               type="text"
-              placeholder="Buscar por NUM COTAÇÃO, REF, PHOTO NO, descrição, nome, loja ou OBS..."
+              placeholder="Buscar por NUM COTAÇÃO, REF, descrição, nome, loja ou OBS..."
               className="input-field pl-10"
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange({ searchTerm: e.target.value })}
@@ -98,14 +126,38 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
           </select>
         </div>
 
-        {/* Filtro por PHOTO NO */}
+        {/* Filtro por Segmento */}
+        <div className="lg:w-48">
+          <select
+            className="input-field"
+            value={filters.segmentoFilter}
+            onChange={(e) => handleFilterChange({ segmentoFilter: e.target.value })}
+          >
+            <option value="">Todos os Segmentos</option>
+            {uniqueSegmentos.map(segmento => (
+              <option key={segmento} value={segmento}>{segmento}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Filtro por Período */}
         <div className="lg:w-48">
           <input
-            type="text"
-            placeholder="Filtrar por PHOTO NO"
+            type="date"
+            placeholder="Data Inicial"
             className="input-field"
-            value={filters.photoNoFilter}
-            onChange={(e) => handleFilterChange({ photoNoFilter: e.target.value })}
+            value={filters.dateRangeStart}
+            onChange={(e) => handleFilterChange({ dateRangeStart: e.target.value })}
+          />
+        </div>
+
+        <div className="lg:w-48">
+          <input
+            type="date"
+            placeholder="Data Final"
+            className="input-field"
+            value={filters.dateRangeEnd}
+            onChange={(e) => handleFilterChange({ dateRangeEnd: e.target.value })}
           />
         </div>
 
@@ -136,9 +188,19 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
               Loja: {filters.shopFilter}
             </span>
           )}
-          {filters.photoNoFilter && (
+          {filters.segmentoFilter && (
             <span className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">
-              PHOTO NO: {filters.photoNoFilter}
+              Segmento: {filters.segmentoFilter}
+            </span>
+          )}
+          {filters.dateRangeStart && (
+            <span className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">
+              De: {filters.dateRangeStart}
+            </span>
+          )}
+          {filters.dateRangeEnd && (
+            <span className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">
+              Até: {filters.dateRangeEnd}
             </span>
           )}
         </div>

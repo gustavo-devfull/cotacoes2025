@@ -32,6 +32,7 @@ export interface CotacaoItem {
   nomeContato: string;
   telefoneContato: string;
   dataCotacao: string;
+  segmento: string;
 }
 
 export interface SummaryStats {
@@ -43,7 +44,9 @@ export interface SummaryStats {
 export interface FilterOptions {
   searchTerm: string;
   shopFilter: string;
-  photoNoFilter: string;
+  segmentoFilter: string;
+  dateRangeStart: string;
+  dateRangeEnd: string;
 }
 
 export interface ImageData {

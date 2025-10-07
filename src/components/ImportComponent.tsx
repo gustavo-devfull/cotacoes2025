@@ -17,6 +17,7 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
   const [nomeContato, setNomeContato] = useState<string>('');
   const [telefoneContato, setTelefoneContato] = useState<string>('');
   const [dataCotacao, setDataCotacao] = useState<string>('');
+  const [segmento, setSegmento] = useState<string>('');
   const [importType, setImportType] = useState<ImportType>('standard');
   const [importResult, setImportResult] = useState<{
     total: number;
@@ -54,6 +55,11 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
 
     if (!dataCotacao.trim()) {
       alert('Por favor, preencha o campo Data da Cotação antes de importar a planilha');
+      return;
+    }
+
+    if (!segmento.trim()) {
+      alert('Por favor, preencha o campo Segmento antes de importar a planilha');
       return;
     }
 
@@ -201,7 +207,7 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
       
       const convertedData = rawData.map(row => {
         console.log('Linha original:', row);
-        const converted = convertSpreadsheetRowToCotacao(row, shopNo || 'IMPORTED', nomeContato, telefoneContato, dataCotacao);
+        const converted = convertSpreadsheetRowToCotacao(row, shopNo || 'IMPORTED', nomeContato, telefoneContato, dataCotacao, segmento);
         console.log('Linha convertida:', converted);
         return converted;
       });
@@ -333,24 +339,6 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
         <div className="p-6">
           {!importResult ? (
             <>
-              {/* Instruções */}
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Instruções de Importação</h3>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <ul className="text-sm text-blue-800 space-y-2">
-                    <li>• Formatos suportados: CSV, Excel (.xlsx, .xls)</li>
-                    <li>• A planilha deve conter as colunas conforme o modelo fornecido</li>
-                    <li>• <strong>Escolha o tipo de importação:</strong></li>
-                    <li className="ml-4">- <strong>Padrão:</strong> Linha 1 (título), Linha 2 (vazia), Linha 3 (cabeçalhos), Linha 4+ (dados)</li>
-                    <li className="ml-4">- <strong>Cabeçalhos na Linha 2:</strong> Linha 1 (título), Linha 2 (cabeçalhos), Linha 3+ (dados)</li>
-                    <li>• <strong>NUM_COTACAO:</strong> Será gerado automaticamente baseado no REF e poderá ser editado depois</li>
-                    <li>• Campos obrigatórios: REF, DESCRIPTION, NAME, CTNS, UNIT/CTN, QTY, U.PRICE, UNIT, AMOUNT, L, W, H, CBM, CBM TOTAL, Peso Unitário(g)</li>
-                    <li>• Campos opcionais: G.W, T.G.W, N.W, T.N.W</li>
-                    <li>• O campo REF será usado como PHOTO_NO para buscar imagens</li>
-                  </ul>
-                </div>
-              </div>
-
               {/* Tipo de Importação */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -454,6 +442,25 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   Esta data será usada como NUM_COTACAO para todos os itens importados
+                </p>
+              </div>
+
+              {/* Campo Segmento */}
+              <div className="mb-6">
+                <label htmlFor="segmento" className="block text-sm font-medium text-gray-700 mb-2">
+                  Segmento <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="segmento"
+                  type="text"
+                  value={segmento}
+                  onChange={(e) => setSegmento(e.target.value)}
+                  placeholder="Digite o segmento"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Este segmento será aplicado a todos os itens importados desta planilha
                 </p>
               </div>
 

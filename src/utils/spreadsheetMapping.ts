@@ -240,7 +240,8 @@ export const convertSpreadsheetRowToCotacao = (
   shopNo: string = 'IMPORTED',
   nomeContato: string = '',
   telefoneContato: string = '',
-  dataCotacao: string = ''
+  dataCotacao: string = '',
+  segmento: string = ''
 ): import('../types').CotacaoItem => {
   // Primeiro, obter o REF para gerar NUM_COTACAO
   const ref = findFieldInRow(row, 'REF')?.trim() || 'UNKNOWN';
@@ -259,6 +260,7 @@ export const convertSpreadsheetRowToCotacao = (
     nomeContato: nomeContato,
     telefoneContato: telefoneContato,
     dataCotacao: dataCotacao,
+    segmento: segmento,
     // Campos de peso com valores padrão
     gw: 0,
     tgw: 0,

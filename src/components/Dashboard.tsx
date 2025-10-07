@@ -3,13 +3,14 @@ import { CotacaoItem } from '../types';
 import { mockData } from '../data/mockData';
 import SearchAndFilters from './SearchAndFilters';
 import CotacoesTable from './CotacoesTable';
+import EditCard from './EditCard';
 import ImportComponent from './ImportComponent';
 import LoginComponent from './LoginComponent';
 import Lightbox from './Lightbox';
 import { useComments } from '../hooks/useComments';
 import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
-import { BarChart3, TrendingUp, Package, Upload, Database, Cloud, Camera } from 'lucide-react';
+import { BarChart3, TrendingUp, Package, Upload, Database, Cloud, Camera, Edit3 } from 'lucide-react';
 import { 
   getCotacoes, 
   updateCotacao, 
@@ -24,6 +25,7 @@ const Dashboard: React.FC = () => {
   const [allData, setAllData] = useState<CotacaoItem[]>([]);
   const [filteredData, setFilteredData] = useState<CotacaoItem[]>([]);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -173,6 +175,51 @@ const Dashboard: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  const handleDeleteMultipleItems = async (items: CotacaoItem[], onProgress?: (progress: number) => void) => {
+    try {
+      const totalItems = items.length;
+      
+      // Buscar todos os documentos do Firebase para encontrar os IDs reais
+      const cotacoes = await getCotacoes();
+      
+      // Excluir cada item individualmente
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        
+        // Encontrar o documento real no Firebase
+        const cotacaoDoc = cotacoes.find(doc => 
+          doc.PHOTO_NO === item.PHOTO_NO && doc.referencia === item.referencia
+        );
+        
+        if (cotacaoDoc) {
+          // Excluir usando o ID real do documento
+          await deleteCotacao(cotacaoDoc.id);
+          console.log('Item excluído do Firebase:', cotacaoDoc.id);
+        } else {
+          console.warn('Documento não encontrado no Firebase para exclusão:', item.PHOTO_NO, item.referencia);
+        }
+        
+        // Atualizar progresso
+        const progress = Math.round(((i + 1) / totalItems) * 100);
+        onProgress?.(progress);
+        
+        // Pequeno delay para mostrar o progresso
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Atualizar os dados locais
+      const itemIds = items.map(item => `${item.PHOTO_NO}-${item.referencia}`);
+      setAllData(prev => prev.filter(i => !itemIds.includes(`${i.PHOTO_NO}-${i.referencia}`)));
+      setFilteredData(prev => prev.filter(i => !itemIds.includes(`${i.PHOTO_NO}-${i.referencia}`)));
+      
+      setShowEditModal(false);
+      alert(`${items.length} produto(s) excluído(s) com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao excluir itens:', error);
+      alert('Erro ao excluir itens. Verifique o console para mais detalhes.');
+    }
+  };
+
   const confirmDelete = async () => {
     if (!itemToDelete) return;
 
@@ -292,6 +339,15 @@ const Dashboard: React.FC = () => {
                 >
                   <Camera className="w-4 h-4" />
                   Imagens
+                </button>
+                
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="btn-secondary flex items-center gap-2"
+                  disabled={isLoading || filteredData.length === 0}
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Editar
                 </button>
               </div>
               
@@ -421,6 +477,15 @@ const Dashboard: React.FC = () => {
         onNavigate={lightbox.navigateTo}
         title={lightbox.title}
       />
+
+      {/* Modal de Edição */}
+      {showEditModal && (
+        <EditCard
+          data={filteredData}
+          onDeleteSelected={handleDeleteMultipleItems}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
 
       {/* Modal de Confirmação de Exclusão */}
       {showDeleteModal && itemToDelete && (

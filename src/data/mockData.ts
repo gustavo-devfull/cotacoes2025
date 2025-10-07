@@ -35,7 +35,8 @@ export const mockData: CotacaoItem[] = [
     OBSERVATIONS_EXTRA: "Embalagem individual com logo personalizado",
     nomeContato: "João Silva",
     telefoneContato: "(11) 99999-9999",
-    dataCotacao: "2025-01-15"
+    dataCotacao: "2025-01-15",
+    segmento: "Eletrônicos"
   },
   {
     SHOP_NO: "SHOP002",
@@ -70,7 +71,8 @@ export const mockData: CotacaoItem[] = [
     OBSERVATIONS_EXTRA: "Caixa premium com carregador USB-C",
     nomeContato: "Maria Santos",
     telefoneContato: "(11) 88888-8888",
-    dataCotacao: "2025-01-16"
+    dataCotacao: "2025-01-16",
+    segmento: "Áudio"
   },
   {
     SHOP_NO: "SHOP001",
@@ -105,7 +107,8 @@ export const mockData: CotacaoItem[] = [
     OBSERVATIONS_EXTRA: "Cabo USB incluído, certificação CE",
     nomeContato: "Pedro Costa",
     telefoneContato: "(11) 77777-7777",
-    dataCotacao: "2025-01-17"
+    dataCotacao: "2025-01-17",
+    segmento: "Energia"
   },
   {
     SHOP_NO: "SHOP003",
@@ -140,7 +143,8 @@ export const mockData: CotacaoItem[] = [
     OBSERVATIONS_EXTRA: "Base ajustável, controle de brilho",
     nomeContato: "Ana Oliveira",
     telefoneContato: "(11) 66666-6666",
-    dataCotacao: "2025-01-18"
+    dataCotacao: "2025-01-18",
+    segmento: "Iluminação"
   },
   {
     SHOP_NO: "SHOP002",
@@ -175,7 +179,8 @@ export const mockData: CotacaoItem[] = [
     OBSERVATIONS_EXTRA: "Pulseira esportiva incluída, app móvel",
     nomeContato: "Carlos Ferreira",
     telefoneContato: "(11) 55555-5555",
-    dataCotacao: "2025-01-19"
+    dataCotacao: "2025-01-19",
+    segmento: "Acessórios"
   }
 ];
 
