@@ -79,14 +79,28 @@ const Dashboard: React.FC = () => {
         const cotacoes = await getCotacoes();
         const cotacaoItems = cotacoes.map(convertToCotacaoItem);
         
-        setAllData(cotacaoItems);
-        setFilteredData(cotacaoItems);
+        // Aplicar estados de seleção e exportação se já estiverem carregados
+        const itemsWithStates = cotacaoItems.map(item => {
+          const itemId = `${item.PHOTO_NO}-${item.referencia}`;
+          return {
+            ...item,
+            isSelected: selectedProducts.has(itemId),
+            isExported: exportedProducts.has(itemId)
+          };
+        });
+        
+        setAllData(itemsWithStates);
+        setFilteredData(itemsWithStates);
         // Resetar filtros após carregar dados
         setShowOnlyExported(false);
         setSortOptions({ field: null, direction: null });
-        console.log('Dados carregados do Firebase:', cotacaoItems.length, 'itens');
+        console.log('✅ Dados carregados do Firebase:', itemsWithStates.length, 'itens');
+        console.log('📊 Estados aplicados:', {
+          selected: itemsWithStates.filter(item => item.isSelected).length,
+          exported: itemsWithStates.filter(item => item.isExported).length
+        });
       } catch (error) {
-        console.error('Erro ao carregar dados do Firebase:', error);
+        console.error('❌ Erro ao carregar dados do Firebase:', error);
         
         // Verificar se é erro de permissão
         if (error instanceof Error && error.message.includes('permissions')) {
@@ -95,8 +109,17 @@ const Dashboard: React.FC = () => {
         }
         
         // Fallback para dados mock em caso de erro
-        setAllData(mockData);
-        setFilteredData(mockData);
+        const mockItemsWithStates = mockData.map(item => {
+          const itemId = `${item.PHOTO_NO}-${item.referencia}`;
+          return {
+            ...item,
+            isSelected: selectedProducts.has(itemId),
+            isExported: exportedProducts.has(itemId)
+          };
+        });
+        
+        setAllData(mockItemsWithStates);
+        setFilteredData(mockItemsWithStates);
         // Resetar filtros após carregar dados mock
         setShowOnlyExported(false);
         setSortOptions({ field: null, direction: null });
@@ -106,7 +129,7 @@ const Dashboard: React.FC = () => {
     };
 
     loadData();
-  }, []);
+  }, [selectedProducts, exportedProducts]); // Adicionadas dependências para aplicar estados
 
   // Carregar estados de seleção e exportação salvos
   useEffect(() => {
@@ -114,34 +137,72 @@ const Dashboard: React.FC = () => {
       if (!currentUser?.id) return;
 
       try {
+        console.log('🔄 Carregando estados de seleção para usuário:', currentUser.id);
         const states = await productSelectionService.loadSelectionState(currentUser.id);
         setSelectedProducts(states.selectedProducts);
         setExportedProducts(states.exportedProducts);
-        console.log('Estados de seleção carregados:', {
+        
+        console.log('✅ Estados de seleção carregados:', {
           selected: states.selectedProducts.size,
-          exported: states.exportedProducts.size
+          exported: states.exportedProducts.size,
+          selectedIds: Array.from(states.selectedProducts),
+          exportedIds: Array.from(states.exportedProducts)
         });
+
+        // Aplicar estados aos dados carregados
+        if (allData.length > 0) {
+          console.log('🔄 Aplicando estados aos dados carregados...');
+          const updatedData = allData.map(item => {
+            const itemId = `${item.PHOTO_NO}-${item.referencia}`;
+            return {
+              ...item,
+              isSelected: states.selectedProducts.has(itemId),
+              isExported: states.exportedProducts.has(itemId)
+            };
+          });
+          
+          setAllData(updatedData);
+          setFilteredData(updatedData);
+          console.log('✅ Estados aplicados aos dados:', updatedData.filter(item => item.isExported).length, 'produtos exportados');
+        }
       } catch (error) {
-        console.error('Erro ao carregar estados de seleção:', error);
+        console.error('❌ Erro ao carregar estados de seleção:', error);
       }
     };
 
     loadSelectionStates();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, allData.length]); // Adicionado allData.length como dependência
 
   // Escutar mudanças em tempo real do Firebase
   useEffect(() => {
     const unsubscribe = subscribeToCotacoes((cotacoes: CotacaoDocument[]) => {
       const cotacaoItems = cotacoes.map(convertToCotacaoItem);
-      setAllData(cotacaoItems);
-      setFilteredData(cotacaoItems);
+      
+      // Preservar estados de seleção e exportação ao atualizar dados
+      const updatedItems = cotacaoItems.map(item => {
+        const itemId = `${item.PHOTO_NO}-${item.referencia}`;
+        return {
+          ...item,
+          isSelected: selectedProducts.has(itemId),
+          isExported: exportedProducts.has(itemId)
+        };
+      });
+      
+      setAllData(updatedItems);
+      setFilteredData(updatedItems);
       // Resetar filtros quando dados são atualizados
       setShowOnlyExported(false);
       setSortOptions({ field: null, direction: null });
+      
+      console.log('🔄 Dados atualizados em tempo real, estados preservados:', {
+        total: updatedItems.length,
+        selected: updatedItems.filter(item => item.isSelected).length,
+        exported: updatedItems.filter(item => item.isExported).length
+      });
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [selectedProducts, exportedProducts]); // Adicionadas dependências para preservar estados
 
   // Reset filtros sempre que os dados forem carregados
   useEffect(() => {
