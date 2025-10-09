@@ -12,6 +12,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
 import { useAlertModal } from '../hooks/useAlertModal';
+import { useUsers } from '../hooks/useUsers';
 import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { sortData, getNextSortDirection } from '../utils/sortUtils';
@@ -52,6 +53,7 @@ const Dashboard: React.FC = () => {
   const { comments, addComment, firebaseError } = useComments();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { currentUser } = useUser();
+  const { users: availableUsers, loading: usersLoading } = useUsers();
   const lightbox = useLightbox();
   const { showSuccess, showError, showWarning, showInfo } = useAlertModal();
 
@@ -202,9 +204,24 @@ const Dashboard: React.FC = () => {
   const handleImportComplete = async (importedData: CotacaoItem[]) => {
     try {
       setIsLoading(true);
+      
+      // Detectar referências duplicadas
+      const existingReferences = new Set(allData.map(item => item.referencia));
+      const processedData = importedData.map(item => ({
+        ...item,
+        isDuplicate: existingReferences.has(item.referencia)
+      }));
+      
       // Salvar dados importados no Firebase
-      await addMultipleCotacoes(importedData);
-      console.log('Dados importados salvos no Firebase:', importedData.length, 'itens');
+      await addMultipleCotacoes(processedData);
+      console.log('Dados importados salvos no Firebase:', processedData.length, 'itens');
+      
+      // Mostrar aviso se houver duplicatas
+      const duplicateCount = processedData.filter(item => item.isDuplicate).length;
+      if (duplicateCount > 0) {
+        showWarning('Referências Duplicadas', `${duplicateCount} produto(s) com referência já existente foram destacados em vermelho claro.`);
+      }
+      
       setShowImportModal(false);
     } catch (error) {
       console.error('Erro ao salvar dados importados:', error);
@@ -452,7 +469,7 @@ const Dashboard: React.FC = () => {
     setItemToDelete(null);
   };
 
-  const handleAddComment = async (productId: string, message: string, imageUrls: string[]) => {
+  const handleAddComment = async (productId: string, message: string, imageUrls: string[], mentionedUsers?: string[]) => {
     if (!currentUser) {
       showWarning('Login Necessário', 'Você precisa estar logado para comentar.');
       return;
@@ -469,10 +486,10 @@ const Dashboard: React.FC = () => {
           description: product.description
         };
         
-        await addComment(productId, message, imageUrls, currentUser, productInfo);
+        await addComment(productId, message, imageUrls, currentUser, productInfo, mentionedUsers);
       } else {
         // Fallback se não encontrar o produto
-        await addComment(productId, message, imageUrls, currentUser);
+        await addComment(productId, message, imageUrls, currentUser, undefined, mentionedUsers);
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
@@ -896,6 +913,12 @@ const Dashboard: React.FC = () => {
               selectedProducts={selectedProducts}
               exportedProducts={exportedProducts}
               onToggleProductSelection={toggleProductSelection}
+              availableUsers={availableUsers.map(user => ({
+                id: user.id,
+                name: user.name,
+                email: user.email
+              }))}
+              usersLoading={usersLoading}
             />
         </div>
       </div>

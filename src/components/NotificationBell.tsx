@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, X, MessageCircle, Package, Clock, Check, CheckCheck } from 'lucide-react';
 import { Notification } from '../types';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
+import { useUsers } from '../hooks/useUsers';
 
 interface NotificationBellProps {
   notifications: Notification[];
@@ -19,12 +20,56 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
   onFilterByRef
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { getUsersByIds } = useUsers();
+  const [mentionedUsersCache, setMentionedUsersCache] = useState<{[key: string]: string[]}>({});
+
+  // Carregar nomes dos usuários marcados
+  useEffect(() => {
+    const loadMentionedUsers = async () => {
+      const cache: {[key: string]: string[]} = {};
+      
+      for (const notification of notifications) {
+        const { mentionedUsers } = notification.commentInfo;
+        if (mentionedUsers && mentionedUsers.length > 0) {
+          const cacheKey = mentionedUsers.sort().join(',');
+          
+          if (!cache[cacheKey]) {
+            try {
+              const users = await getUsersByIds(mentionedUsers);
+              cache[cacheKey] = users.map(user => user.name);
+            } catch (error) {
+              console.error('Erro ao carregar usuários marcados:', error);
+              cache[cacheKey] = mentionedUsers; // Fallback para IDs
+            }
+          }
+        }
+      }
+      
+      setMentionedUsersCache(cache);
+    };
+
+    if (notifications.length > 0) {
+      loadMentionedUsers();
+    }
+  }, [notifications, getUsersByIds]);
 
   const formatNotificationMessage = (notification: Notification) => {
-    const { userName, message } = notification.commentInfo;
+    const { userName, message, mentionedUsers } = notification.commentInfo;
     const { shopNo, ref } = notification.productInfo;
     
-    return `${userName} comentou em ${shopNo} - ${ref}: "${message.length > 50 ? message.substring(0, 50) + '...' : message}"`;
+    let baseMessage = `${userName} comentou em ${shopNo} - ${ref}: "${message.length > 50 ? message.substring(0, 50) + '...' : message}"`;
+    
+    // Adicionar informação sobre usuários marcados se existirem
+    if (mentionedUsers && mentionedUsers.length > 0) {
+      const cacheKey = mentionedUsers.sort().join(',');
+      const userNames = mentionedUsersCache[cacheKey] || mentionedUsers;
+      
+      if (userNames.length > 0) {
+        baseMessage += ` (marcou: ${userNames.join(', ')})`;
+      }
+    }
+    
+    return baseMessage;
   };
 
   const formatProductInfo = (notification: Notification) => {

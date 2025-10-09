@@ -36,6 +36,8 @@ export interface CotacaoItem {
   // Estados para exportação
   isSelected?: boolean;
   isExported?: boolean;
+  // Estado para duplicatas
+  isDuplicate?: boolean;
 }
 
 export interface SummaryStats {
@@ -66,6 +68,7 @@ export interface Comment {
   message: string;
   images: string[]; // URLs das imagens no FTP
   timestamp: Date;
+  mentionedUsers?: string[]; // IDs dos usuários marcados no comentário
 }
 
 export interface User {
@@ -112,6 +115,7 @@ export interface Notification {
     userName: string;
     message: string;
     timestamp: Date;
+    mentionedUsers?: string[]; // IDs dos usuários marcados
   };
   isRead: boolean;
   createdAt: Date;

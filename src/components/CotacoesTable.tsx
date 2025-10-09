@@ -251,7 +251,7 @@ interface CotacoesTableProps {
   isLoading?: boolean;
   comments: Comment[];
   currentUser: User | null;
-  onAddComment: (productId: string, message: string, imageUrls: string[]) => void;
+  onAddComment: (productId: string, message: string, imageUrls: string[], mentionedUsers?: string[]) => void;
   lightbox: {
     openLightbox: (images: string[], index?: number, title?: string) => void;
   };
@@ -261,22 +261,27 @@ interface CotacoesTableProps {
   selectedProducts: Set<string>;
   exportedProducts: Set<string>;
   onToggleProductSelection: (productId: string) => void;
+  // Lista de usuários disponíveis para marcar
+  availableUsers?: { id: string; name: string; email: string }[];
+  usersLoading?: boolean; // Indicador de carregamento dos usuários
 }
 
 const CotacoesTable: React.FC<CotacoesTableProps> = ({ 
   data, 
   onUpdateItem, 
   onDeleteItem, 
-  isLoading = false,
-  comments,
-  currentUser,
-  onAddComment,
-  lightbox,
-  sortOptions,
+  isLoading = false, 
+  comments, 
+  currentUser, 
+  onAddComment, 
+  lightbox, 
+  sortOptions, 
   onSort,
   selectedProducts,
   exportedProducts,
-  onToggleProductSelection
+  onToggleProductSelection,
+  availableUsers = [],
+  usersLoading = false
 }) => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -458,11 +463,13 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               const productId = `${item.PHOTO_NO}-${item.referencia}`;
               const isSelected = selectedProducts.has(productId);
               const isExported = exportedProducts.has(productId);
+              const isDuplicate = item.isDuplicate;
               
               return (
                 <tr 
                   key={`${item.PHOTO_NO}-${index}`} 
                   className={`hover:bg-gray-50 transition-colors duration-150 ${
+                    isDuplicate ? 'bg-red-50 border-l-4 border-l-red-400' :
                     isExported ? 'bg-green-50 border-l-4 border-l-green-400' : ''
                   }`}
                 >
@@ -727,6 +734,8 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                     onImageClick={(images, index, title) => {
                       lightbox.openLightbox(images, index, title);
                     }}
+                    availableUsers={availableUsers}
+                    usersLoading={usersLoading}
                   />
                 </td>
                 

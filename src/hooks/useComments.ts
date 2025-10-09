@@ -24,7 +24,8 @@ export const useComments = () => {
           userName: data.userName,
           message: data.message,
           images: data.images || [],
-          timestamp: data.timestamp?.toDate() || new Date()
+          timestamp: data.timestamp?.toDate() || new Date(),
+          mentionedUsers: data.mentionedUsers || [] // ADICIONADO: Carregar mentionedUsers
         });
       });
       setComments(commentsData);
@@ -48,9 +49,19 @@ export const useComments = () => {
     message: string, 
     imageUrls: string[], 
     user: { id: string; name: string },
-    productInfo?: { shopNo: string; ref: string; description: string }
+    productInfo?: { shopNo: string; ref: string; description: string },
+    mentionedUsers?: string[]
   ) => {
     try {
+      console.log('💾 SALVANDO COMENTÁRIO NO FIREBASE:', {
+        productId,
+        message,
+        imageUrls: imageUrls.length,
+        user: user.name,
+        mentionedUsers,
+        mentionedUsersLength: mentionedUsers?.length || 0
+      });
+      
       // Sempre usar Firebase - modo online apenas
       await addDoc(collection(db, 'comments'), {
         productId,
@@ -58,7 +69,8 @@ export const useComments = () => {
         userName: user.name,
         message,
         images: imageUrls,
-        timestamp: new Date()
+        timestamp: new Date(),
+        mentionedUsers: mentionedUsers || []
       });
       
       console.log('Comentário salvo no Firebase com sucesso');
@@ -89,7 +101,8 @@ export const useComments = () => {
             userId: user.id,
             userName: user.name,
             message: notificationMessage,
-            timestamp: new Date()
+            timestamp: new Date(),
+            mentionedUsers: mentionedUsers || []
           },
           isRead: false,
           createdAt: new Date()

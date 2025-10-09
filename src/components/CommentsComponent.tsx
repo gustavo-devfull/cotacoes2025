@@ -1,27 +1,91 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Image, X } from 'lucide-react';
 import { Comment as CommentType } from '../types';
 import { uploadService } from '../services/uploadService';
+import { useUsers } from '../hooks/useUsers';
 
 interface CommentsComponentProps {
   productId: string;
   comments: CommentType[];
   currentUser: { id: string; name: string; avatar?: string };
-  onAddComment: (productId: string, message: string, imageUrls: string[]) => void;
+  onAddComment: (productId: string, message: string, imageUrls: string[], mentionedUsers?: string[]) => void;
   onImageClick?: (images: string[], index: number, title?: string) => void;
+  availableUsers?: { id: string; name: string; email: string }[]; // Lista de usuários disponíveis para marcar
+  usersLoading?: boolean; // Indicador de carregamento dos usuários
 }
 
 const CommentsComponent: React.FC<CommentsComponentProps> = ({
   productId,
   comments,
   onAddComment,
-  onImageClick
+  onImageClick,
+  availableUsers = [],
+  usersLoading = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [mentionedUsersNames, setMentionedUsersNames] = useState<{[key: string]: string[]}>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { getUsersByIds } = useUsers();
+
+  // Filtrar comentários do produto atual
+  const productComments = comments.filter(comment => comment.productId === productId);
+  
+  // DEBUG: Adicionar comentário de teste se não houver comentários com mentionedUsers
+  const hasCommentsWithMentions = productComments.some(comment => comment.mentionedUsers && comment.mentionedUsers.length > 0);
+  if (!hasCommentsWithMentions && productComments.length > 0) {
+    console.log('🔍 DEBUG: Nenhum comentário com usuários marcados encontrado');
+    console.log('📊 Comentários disponíveis:', productComments.map(c => ({
+      id: c.id,
+      message: c.message,
+      mentionedUsers: c.mentionedUsers,
+      hasMentionedUsers: !!(c.mentionedUsers && c.mentionedUsers.length > 0)
+    })));
+  }
+
+  // Carregar nomes dos usuários marcados
+  useEffect(() => {
+    const loadMentionedUsersNames = async () => {
+      console.log('🔍 Carregando nomes dos usuários marcados...');
+      console.log('📊 Comentários recebidos:', comments.length);
+      
+      const cache: {[key: string]: string[]} = {};
+      
+      for (const comment of productComments) {
+        console.log(`📝 Comentário ${comment.id}:`, {
+          message: comment.message,
+          mentionedUsers: comment.mentionedUsers,
+          hasMentionedUsers: !!(comment.mentionedUsers && comment.mentionedUsers.length > 0)
+        });
+        
+        if (comment.mentionedUsers && comment.mentionedUsers.length > 0) {
+          const cacheKey = comment.mentionedUsers.sort().join(',');
+          
+          if (!cache[cacheKey]) {
+            try {
+              console.log(`🔍 Buscando nomes para IDs: ${comment.mentionedUsers.join(', ')}`);
+              const users = await getUsersByIds(comment.mentionedUsers);
+              cache[cacheKey] = users.map(user => user.name);
+              console.log(`✅ Nomes encontrados: ${cache[cacheKey].join(', ')}`);
+            } catch (error) {
+              console.error('❌ Erro ao carregar nomes dos usuários marcados:', error);
+              cache[cacheKey] = comment.mentionedUsers; // Fallback para IDs
+            }
+          }
+        }
+      }
+      
+      console.log('📊 Cache final de nomes:', cache);
+      setMentionedUsersNames(cache);
+    };
+
+    if (productComments.length > 0) {
+      loadMentionedUsersNames();
+    }
+  }, [productComments, getUsersByIds]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim() || selectedFiles.length > 0) {
@@ -54,11 +118,20 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
         }
         
         // Enviar comentário com URLs das imagens
-        onAddComment(productId, newMessage.trim(), imageUrls);
+        console.log('📤 Enviando comentário com usuários marcados:', {
+          productId,
+          message: newMessage.trim(),
+          imageUrls,
+          selectedUsers,
+          hasSelectedUsers: selectedUsers.length > 0
+        });
+        
+        onAddComment(productId, newMessage.trim(), imageUrls, selectedUsers.length > 0 ? selectedUsers : undefined);
         
         // Limpar formulário
         setNewMessage('');
         setSelectedFiles([]);
+        setSelectedUsers([]);
       } catch (error) {
         console.error('Erro ao enviar comentário:', error);
         alert('Erro ao enviar comentário. Tente novamente.');
@@ -108,8 +181,6 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
       minute: '2-digit'
     });
   };
-
-  const productComments = comments.filter(comment => comment.productId === productId);
 
   return (
     <div className="relative">
@@ -177,6 +248,43 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
                           </p>
                         )}
 
+                        {/* Usuários marcados - SEMPRE mostrar se existirem */}
+                        {comment.mentionedUsers && comment.mentionedUsers.length > 0 && (
+                          <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                            <div className="flex items-center gap-2 text-sm text-blue-700">
+                              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                              </svg>
+                              <span className="font-medium">Marcou:</span>
+                              <span className="font-semibold text-blue-800">
+                                {(() => {
+                                  console.log(`🏷️ RENDERIZANDO COMENTÁRIO ${comment.id}:`, {
+                                    mentionedUsers: comment.mentionedUsers,
+                                    mentionedUsersLength: comment.mentionedUsers?.length,
+                                    message: comment.message,
+                                    timestamp: comment.timestamp
+                                  });
+                                  
+                                  // SEMPRE mostrar os IDs primeiro, depois tentar nomes
+                                  const ids = comment.mentionedUsers.join(', ');
+                                  console.log(`🔍 IDs dos usuários marcados: ${ids}`);
+                                  
+                                  const cacheKey = comment.mentionedUsers.sort().join(',');
+                                  const userNames = mentionedUsersNames[cacheKey];
+                                  
+                                  if (userNames && userNames.length > 0) {
+                                    console.log(`✅ Usando nomes do cache: ${userNames.join(', ')}`);
+                                    return userNames.join(', ');
+                                  }
+                                  
+                                  console.log(`⚠️ Usando IDs como fallback: ${ids}`);
+                                  return ids;
+                                })()}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Imagens do comentário */}
                         {comment.images.length > 0 && (
                           <div className="grid grid-cols-2 gap-2 mt-2">
@@ -206,15 +314,6 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
             {/* Área de novo comentário */}
             <div className="border-t border-gray-200 p-4">
               {/* Indicador de upload */}
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-blue-700">
-                    Upload FTP: Imagens serão salvas no servidor FTP
-                  </span>
-                </div>
-              </div>
-
               <div className="space-y-3">
             {/* Arquivos selecionados */}
             {selectedFiles.length > 0 && (
@@ -236,6 +335,45 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Seleção de usuários para marcar */}
+            {(availableUsers.length > 0 || usersLoading) && (
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Marcar usuários:
+                </label>
+                {usersLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Carregando usuários...
+                  </div>
+                ) : availableUsers.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {availableUsers.map((user) => (
+                      <label key={user.id} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedUsers([...selectedUsers, user.id]);
+                            } else {
+                              setSelectedUsers(selectedUsers.filter(id => id !== user.id));
+                            }
+                          }}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">{user.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 italic">
+                    Nenhum usuário cadastrado no sistema
+                  </div>
+                )}
               </div>
             )}
 
