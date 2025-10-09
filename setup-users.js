@@ -1,13 +1,21 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 
+// ⚠️ IMPORTANTE: Configure as variáveis de ambiente antes de executar
+// export FIREBASE_API_KEY="sua_api_key_aqui"
+// export FIREBASE_AUTH_DOMAIN="seu_dominio_aqui"
+// export FIREBASE_PROJECT_ID="seu_project_id_aqui"
+// export FIREBASE_STORAGE_BUCKET="seu_storage_bucket_aqui"
+// export FIREBASE_MESSAGING_SENDER_ID="seu_sender_id_aqui"
+// export FIREBASE_APP_ID="seu_app_id_aqui"
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBvQZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8Q",
-  authDomain: "animagic-landing.firebaseapp.com",
-  projectId: "animagic-landing",
-  storageBucket: "animagic-landing.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
+  apiKey: process.env.FIREBASE_API_KEY || "CONFIGURE_SUAS_VARIAVEIS_DE_AMBIENTE",
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "CONFIGURE_SUAS_VARIAVEIS_DE_AMBIENTE",
+  projectId: process.env.FIREBASE_PROJECT_ID || "CONFIGURE_SUAS_VARIAVEIS_DE_AMBIENTE",
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "CONFIGURE_SUAS_VARIAVEIS_DE_AMBIENTE",
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "CONFIGURE_SUAS_VARIAVEIS_DE_AMBIENTE",
+  appId: process.env.FIREBASE_APP_ID || "CONFIGURE_SUAS_VARIAVEIS_DE_AMBIENTE"
 };
 
 const app = initializeApp(firebaseConfig);
