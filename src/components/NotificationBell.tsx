@@ -8,13 +8,15 @@ interface NotificationBellProps {
   unreadCount: number;
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
+  onFilterByRef?: (ref: string) => void;
 }
 
 const NotificationBell: React.FC<NotificationBellProps> = ({
   notifications,
   unreadCount,
   onMarkAsRead,
-  onMarkAllAsRead
+  onMarkAllAsRead,
+  onFilterByRef
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -55,7 +57,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
           />
           
           {/* Notification Panel */}
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
+          <div className="absolute right-0 mt-2 w-[28rem] max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden overflow-x-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2">
@@ -113,7 +115,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <p className={`text-sm font-medium ${
+                            <p className={`text-sm font-medium break-words ${
                               !notification.isRead ? 'text-gray-900' : 'text-gray-700'
                             }`}>
                               {formatNotificationMessage(notification)}
@@ -121,9 +123,22 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                             
                             <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
                               <Package className="w-3 h-3" />
-                              <span className="truncate">
-                                {formatProductInfo(notification)}
-                              </span>
+                              {onFilterByRef ? (
+                                <button
+                                  onClick={() => {
+                                    onFilterByRef(notification.productInfo.ref);
+                                    setIsOpen(false); // Fechar o modal após clicar
+                                  }}
+                                  className="text-left break-words text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+                                  title={`Filtrar tabela por REF: ${notification.productInfo.ref}`}
+                                >
+                                  {formatProductInfo(notification)}
+                                </button>
+                              ) : (
+                                <span className="break-words">
+                                  {formatProductInfo(notification)}
+                                </span>
+                              )}
                             </div>
                             
                             <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
