@@ -30,14 +30,18 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center gap-3">
+            <button 
+              onClick={() => handlePageChange('dashboard')}
+              className="flex-shrink-0 flex items-center gap-3 hover:opacity-80 transition-opacity duration-200"
+              title="Voltar ao Dashboard"
+            >
               <img 
                 src={RaviLogo} 
                 alt="RAVI Logo" 
                 className="h-8 w-auto"
               />
               <h1 className="text-xl font-bold text-blue-600">Sistema de Cotações</h1>
-            </div>
+            </button>
           </div>
 
           {/* Desktop Navigation */}

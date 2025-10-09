@@ -280,9 +280,11 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
 
   const scrollToPhoto = () => {
     if (scrollContainerRef.current) {
-      // Calcular a posição aproximada da coluna MOQ
-      // SEL (60px) + SHOP NO (190px) + PHOTO (100px) + REF (150px) + SEGMENTO (150px) + DESCRIPTION (190px) + OBS (400px) = 1240px
-      const moqColumnPosition = 1240;
+      // Calcular a posição da coluna MOQ considerando as colunas fixas
+      // Colunas fixas: SEL (60px) + PHOTO (100px) + REF (150px) = 310px
+      // Colunas antes do MOQ: SHOP NO (190px) + SEGMENTO (150px) + DESCRIPTION (190px) + OBS (400px) = 930px
+      // Posição MOQ = 930px (colunas não fixas antes do MOQ)
+      const moqColumnPosition = 930;
       scrollContainerRef.current.scrollTo({
         left: moqColumnPosition,
         behavior: 'smooth'
@@ -345,9 +347,9 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
       
       <div ref={scrollContainerRef} className="overflow-x-auto max-h-[600px] overflow-y-auto">
         <table className="w-full table-fixed">
-          <thead className="table-header sticky top-0 z-20 bg-white shadow-sm">
+          <thead className="table-header sticky top-0 z-40 bg-white shadow-sm">
             <tr>
-              <th className="table-cell text-center w-[60px] border-r border-gray-200 bg-gray-50">
+              <th className="table-cell text-center w-[60px] border-r border-gray-200 bg-gray-50 sticky left-0 z-50">
                 <div className="flex items-center justify-center">
                   <span className="text-xs text-gray-600">SEL</span>
                 </div>
@@ -355,8 +357,8 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               <SortableHeader field="SHOP_NO" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
                 SHOP NO
               </SortableHeader>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">PHOTO</th>
-              <SortableHeader field="referencia" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
+              <th className="table-cell text-center w-[100px] border-r border-gray-200 sticky left-[60px] z-50 bg-white">PHOTO</th>
+              <SortableHeader field="referencia" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px] sticky left-[160px] z-50 bg-white border-r border-gray-200">
                 REF
               </SortableHeader>
               <SortableHeader field="segmento" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
@@ -428,7 +430,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               <SortableHeader field="telefoneContato" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
                 TELEFONE CONTATO
               </SortableHeader>
-              <th className="table-cell text-center w-[190px]">AÇÕES</th>
+              <th className="table-cell text-center w-[80px]">AÇÕES</th>
             </tr>
           </thead>
           <tbody>
@@ -444,7 +446,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                     isExported ? 'bg-green-50 border-l-4 border-l-green-400' : ''
                   }`}
                 >
-                  <td className="table-cell text-center border-r border-gray-200 w-[60px]">
+                  <td className="table-cell text-center border-r border-gray-200 w-[60px] sticky left-0 z-20 bg-white">
                     <div className="flex items-center justify-center">
                       <ProductToggle
                         isSelected={isSelected}
@@ -467,7 +469,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                   )}
                 </td>
                 {/* PHOTO */}
-                <td className="table-cell text-center border-r border-gray-200 w-[100px]">
+                <td className="table-cell text-center border-r border-gray-200 w-[100px] sticky left-[60px] z-20 bg-white">
                   <ProductImage 
                     productRef={item.referencia} 
                     description={item.description}
@@ -476,7 +478,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                     }}
                   />
                 </td>
-                <td className="table-cell font-medium text-blue-600 border-r border-gray-200 w-[150px]">
+                <td className="table-cell font-medium text-blue-600 border-r border-gray-200 w-[150px] sticky left-[160px] z-20 bg-white">
                   {onUpdateItem ? (
                     <EditableCell 
                       value={item.referencia} 
@@ -739,17 +741,16 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                 </td>
                 
                 {/* Ações */}
-                <td className="table-cell text-center w-[190px]">
+                <td className="table-cell text-center w-[80px]">
                   {onDeleteItem && (
                     <button
                       onClick={() => onDeleteItem(item)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors duration-150 flex items-center gap-1"
+                      className="bg-red-500 hover:bg-red-600 text-white p-1 rounded-md transition-colors duration-150 flex items-center justify-center"
                       title="Excluir produto"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                      Excluir
                     </button>
                   )}
                 </td>

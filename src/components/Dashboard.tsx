@@ -614,8 +614,17 @@ const Dashboard: React.FC = () => {
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
                 <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex items-center gap-3">
                 <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Gerenciar Cotações</h1>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
+                  title="Atualizar página"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
               </div>
             </div>
             
