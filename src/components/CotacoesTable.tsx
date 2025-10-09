@@ -1,9 +1,10 @@
 import React from 'react';
-import { CotacaoItem, Comment, User } from '../types';
+import { CotacaoItem, Comment, User, SortOptions } from '../types';
 import { Eye, Loader2, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import CommentsComponent from './CommentsComponent';
 import { ftpImageService } from '../services/ftpImageService';
 import { formatDateToBrazilian } from '../utils/dateUtils';
+import SortableHeader from './SortableHeader';
 
 // Componente para exibir imagem do produto
 const ProductImage: React.FC<{ 
@@ -29,15 +30,34 @@ const ProductImage: React.FC<{
       setImageLoaded(false);
 
       try {
+        // Construir URL diretamente para melhor performance
+        const cleanRef = productRef.trim().toUpperCase();
+        const directUrl = `https://ideolog.ia.br/images/products/${cleanRef}.jpg`;
+        
+        // Verificar cache primeiro
+        const cachedUrl = ftpImageService.getCacheStats().keys.includes(cleanRef) 
+          ? directUrl 
+          : null;
+        
+        if (cachedUrl) {
+          setImageUrl(cachedUrl);
+          setIsLoading(false);
+          return;
+        }
+
+        // Tentar obter URL do serviço
         const url = await ftpImageService.getImageUrl(productRef);
         if (url) {
           setImageUrl(url);
         } else {
-          setImageError(true);
+          // Se o serviço não encontrou, tentar URL direta
+          setImageUrl(directUrl);
         }
       } catch (error) {
         console.error(`Erro ao carregar imagem para REF ${productRef}:`, error);
-        setImageError(true);
+        // Em caso de erro, tentar URL direta
+        const cleanRef = productRef.trim().toUpperCase();
+        setImageUrl(`https://ideolog.ia.br/images/products/${cleanRef}.jpg`);
       } finally {
         setIsLoading(false);
       }
@@ -50,6 +70,16 @@ const ProductImage: React.FC<{
     if (onImageClick && imageLoaded && !imageError && imageUrl) {
       onImageClick(imageUrl, description);
     }
+  };
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoaded(false);
   };
 
   if (isLoading) {
@@ -74,12 +104,10 @@ const ProductImage: React.FC<{
         src={imageUrl}
         alt={description}
         className="w-20 h-20 object-cover rounded-lg border border-gray-200 transition-all duration-200 cursor-pointer hover:opacity-80 hover:scale-105 opacity-100"
-        onLoad={() => setImageLoaded(true)}
-        onError={() => {
-          setImageError(true);
-          setImageLoaded(true);
-        }}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
         onClick={handleImageClick}
+        loading="lazy"
         title={`REF: ${productRef} - Clique para ampliar`}
       />
     </div>
@@ -207,6 +235,8 @@ interface CotacoesTableProps {
   lightbox: {
     openLightbox: (images: string[], index?: number, title?: string) => void;
   };
+  sortOptions: SortOptions;
+  onSort: (field: keyof CotacaoItem) => void;
 }
 
 const CotacoesTable: React.FC<CotacoesTableProps> = ({ 
@@ -217,7 +247,9 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
   comments,
   currentUser,
   onAddComment,
-  lightbox
+  lightbox,
+  sortOptions,
+  onSort
 }) => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -308,32 +340,82 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
         <table className="w-full table-fixed">
           <thead className="table-header sticky top-0 z-20 bg-white shadow-sm">
             <tr>
-              <th className="table-cell text-left w-[190px] border-r border-gray-200">SHOP NO</th>
-              <th className="table-cell text-left w-[190px] border-r border-gray-200">NUM COTAÇÃO</th>
-              <th className="table-cell text-left w-[190px] border-r border-gray-200">REF</th>
-              <th className="table-cell text-left w-[190px] border-r border-gray-200">DESCRIPTION</th>
-              <th className="table-cell text-left w-[400px] border-r border-gray-200">OBS</th>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">MOQ</th>
+              <SortableHeader field="SHOP_NO" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
+                SHOP NO
+              </SortableHeader>
+              <SortableHeader field="NUM_COTACAO" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
+                NUM COTAÇÃO
+              </SortableHeader>
+              <SortableHeader field="referencia" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
+                REF
+              </SortableHeader>
+              <SortableHeader field="description" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
+                DESCRIPTION
+              </SortableHeader>
+              <SortableHeader field="obs" sortOptions={sortOptions} onSort={onSort} className="text-left w-[400px]">
+                OBS
+              </SortableHeader>
+              <SortableHeader field="MOQ" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
+                MOQ
+              </SortableHeader>
               <th className="table-cell text-center w-[100px] border-r border-gray-200">PHOTO</th>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">CTNS</th>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">UNIT/CTN</th>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">QTY</th>
-              <th className="table-cell text-right w-[150px] border-r border-gray-200">U.PRICE RMB</th>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">UNIT</th>
-              <th className="table-cell text-right w-[150px] border-r border-gray-200">AMOUNT</th>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">L (cm)</th>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">W (cm)</th>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">H (cm)</th>
-              <th className="table-cell text-right w-[100px] border-r border-gray-200">CBM</th>
-              <th className="table-cell text-right w-[150px] border-r border-gray-200">CBM TOTAL</th>
-              <th className="table-cell text-right w-[100px] border-r border-gray-200">G.W</th>
-              <th className="table-cell text-right w-[100px] border-r border-gray-200">T.G.W</th>
-              <th className="table-cell text-right w-[100px] border-r border-gray-200">N.W</th>
-              <th className="table-cell text-right w-[100px] border-r border-gray-200">T.N.W</th>
-              <th className="table-cell text-center w-[190px] border-r border-gray-200">PESO UNIT (kg)</th>
-              <th className="table-cell text-left w-[400px] border-r border-gray-200">OBSERVATIONS EXTRA</th>
-              <th className="table-cell text-left w-[150px] border-r border-gray-200">NOME CONTATO</th>
-              <th className="table-cell text-left w-[150px] border-r border-gray-200">TELEFONE CONTATO</th>
+              <SortableHeader field="ctns" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
+                CTNS
+              </SortableHeader>
+              <SortableHeader field="unitCtn" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
+                UNIT/CTN
+              </SortableHeader>
+              <SortableHeader field="qty" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
+                QTY
+              </SortableHeader>
+              <SortableHeader field="unitPriceRmb" sortOptions={sortOptions} onSort={onSort} className="text-right w-[150px]">
+                U.PRICE RMB
+              </SortableHeader>
+              <SortableHeader field="unit" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
+                UNIT
+              </SortableHeader>
+              <SortableHeader field="amount" sortOptions={sortOptions} onSort={onSort} className="text-right w-[150px]">
+                AMOUNT
+              </SortableHeader>
+              <SortableHeader field="l" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
+                L (cm)
+              </SortableHeader>
+              <SortableHeader field="w" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
+                W (cm)
+              </SortableHeader>
+              <SortableHeader field="h" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
+                H (cm)
+              </SortableHeader>
+              <SortableHeader field="cbm" sortOptions={sortOptions} onSort={onSort} className="text-right w-[100px]">
+                CBM
+              </SortableHeader>
+              <SortableHeader field="cbm_total" sortOptions={sortOptions} onSort={onSort} className="text-right w-[150px]">
+                CBM TOTAL
+              </SortableHeader>
+              <SortableHeader field="gw" sortOptions={sortOptions} onSort={onSort} className="text-right w-[100px]">
+                G.W
+              </SortableHeader>
+              <SortableHeader field="tgw" sortOptions={sortOptions} onSort={onSort} className="text-right w-[100px]">
+                T.G.W
+              </SortableHeader>
+              <SortableHeader field="nw" sortOptions={sortOptions} onSort={onSort} className="text-right w-[100px]">
+                N.W
+              </SortableHeader>
+              <SortableHeader field="tnw" sortOptions={sortOptions} onSort={onSort} className="text-right w-[100px]">
+                T.N.W
+              </SortableHeader>
+              <SortableHeader field="pesoUnitario" sortOptions={sortOptions} onSort={onSort} className="text-center w-[150px]">
+                PESO UNIT (kg)
+              </SortableHeader>
+              <SortableHeader field="OBSERVATIONS_EXTRA" sortOptions={sortOptions} onSort={onSort} className="text-left w-[210px]">
+                OBSERVATIONS EXTRA
+              </SortableHeader>
+              <SortableHeader field="nomeContato" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
+                NOME CONTATO
+              </SortableHeader>
+              <SortableHeader field="telefoneContato" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
+                TELEFONE CONTATO
+              </SortableHeader>
               <th className="table-cell text-center w-[190px]">AÇÕES</th>
             </tr>
           </thead>
@@ -366,7 +448,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                     formatDateToBrazilian(item.NUM_COTACAO)
                   )}
                 </td>
-                <td className="table-cell font-medium text-blue-600 border-r border-gray-200 w-[190px]">
+                <td className="table-cell font-medium text-blue-600 border-r border-gray-200 w-[150px]">
                   {onUpdateItem ? (
                     <EditableCell 
                       value={item.referencia} 
@@ -569,7 +651,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                   {formatNumber(item.tnw, 2)}
                 </td>
                 
-                <td className="table-cell text-center border-r border-gray-200 w-[190px]">
+                <td className="table-cell text-center border-r border-gray-200 w-[150px]">
                   {onUpdateItem ? (
                     <EditableCell 
                       value={item.pesoUnitario} 
@@ -584,7 +666,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                 </td>
                 
                 {/* Sistema de Comentários */}
-                <td className="table-cell border-r border-gray-200 w-[400px]">
+                <td className="table-cell border-r border-gray-200 w-[210px]">
                   <CommentsComponent
                     productId={`${item.PHOTO_NO}-${item.referencia}`}
                     comments={comments}

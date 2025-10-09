@@ -92,3 +92,8 @@ As correções implementadas resolvem os problemas de validação e conversão. 
 
 **Teste novamente a importação - agora deve funcionar perfeitamente! 🎉**
 
+
+
+
+
+

@@ -267,3 +267,8 @@ className="table-cell text-right border-r border-gray-200"
 
 **Layout profissional com largura fixa e separadores visuais implementados! ✨**
 
+
+
+
+
+

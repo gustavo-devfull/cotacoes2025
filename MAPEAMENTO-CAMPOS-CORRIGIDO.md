@@ -174,3 +174,8 @@ Mapeando campo: Peso Unitário(g) -> pesoUnitario, valor: 2900
 
 **Mapeamento de campos undefined resolvido - busca flexível funcionando perfeitamente! ✨**
 
+
+
+
+
+

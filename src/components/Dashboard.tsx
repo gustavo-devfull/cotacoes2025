@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { CotacaoItem } from '../types';
+import { CotacaoItem, SortOptions } from '../types';
 import { mockData } from '../data/mockData';
 import SearchAndFilters from './SearchAndFilters';
 import CotacoesTable from './CotacoesTable';
 import EditCard from './EditCard';
 import ImportComponent from './ImportComponent';
-import LoginComponent from './LoginComponent';
 import Lightbox from './Lightbox';
+import NotificationBell from './NotificationBell';
 import { useComments } from '../hooks/useComments';
+import { useNotifications } from '../hooks/useNotifications';
 import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
 import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3 } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
+import { sortData, getNextSortDirection } from '../utils/sortUtils';
 import { 
   getCotacoes, 
   updateCotacao, 
@@ -28,12 +30,16 @@ const Dashboard: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<CotacaoItem | null>(null);
+  const [sortOptions, setSortOptions] = useState<SortOptions>({
+    field: null,
+    direction: null
+  });
   
-  // Hooks para comentários e usuário
+  // Hooks para comentários, notificações e usuário
   const { comments, addComment, firebaseError } = useComments();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { currentUser } = useUser();
   const lightbox = useLightbox();
 
@@ -47,7 +53,6 @@ const Dashboard: React.FC = () => {
         
         setAllData(cotacaoItems);
         setFilteredData(cotacaoItems);
-        setIsConnected(true);
         console.log('Dados carregados do Firebase:', cotacaoItems.length, 'itens');
       } catch (error) {
         console.error('Erro ao carregar dados do Firebase:', error);
@@ -61,7 +66,6 @@ const Dashboard: React.FC = () => {
         // Fallback para dados mock em caso de erro
         setAllData(mockData);
         setFilteredData(mockData);
-        setIsConnected(false);
       } finally {
         setIsLoading(false);
       }
@@ -76,15 +80,31 @@ const Dashboard: React.FC = () => {
       const cotacaoItems = cotacoes.map(convertToCotacaoItem);
       setAllData(cotacaoItems);
       setFilteredData(cotacaoItems);
-      setIsConnected(true);
     });
 
     return () => unsubscribe();
   }, []);
 
 
+  // Função para aplicar filtros
   const handleFilterChange = (newFilteredData: CotacaoItem[]) => {
-    setFilteredData(newFilteredData);
+    const sortedData = sortData(newFilteredData, sortOptions);
+    setFilteredData(sortedData);
+  };
+
+  // Função para ordenação
+  const handleSort = (field: keyof CotacaoItem) => {
+    const newDirection = getNextSortDirection(sortOptions.field, sortOptions.direction, field);
+    const newSortOptions: SortOptions = {
+      field,
+      direction: newDirection
+    };
+    
+    setSortOptions(newSortOptions);
+    
+    // Aplicar ordenação aos dados filtrados
+    const sortedData = sortData(filteredData, newSortOptions);
+    setFilteredData(sortedData);
   };
 
   const handleImportComplete = async (importedData: CotacaoItem[]) => {
@@ -259,7 +279,21 @@ const Dashboard: React.FC = () => {
     }
 
     try {
-      await addComment(productId, message, imageUrls, currentUser);
+      // Encontrar o produto para obter suas informações
+      const product = allData.find(item => `${item.PHOTO_NO}-${item.referencia}` === productId);
+      
+      if (product) {
+        const productInfo = {
+          shopNo: product.SHOP_NO,
+          ref: product.referencia,
+          description: product.description
+        };
+        
+        await addComment(productId, message, imageUrls, currentUser, productInfo);
+      } else {
+        // Fallback se não encontrar o produto
+        await addComment(productId, message, imageUrls, currentUser);
+      }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -273,16 +307,18 @@ const Dashboard: React.FC = () => {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-8 h-8 text-white" />
+            {/* Logo e Título */}
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Gerenciar Cotações</h1>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Gerenciar Cotações</h1>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
+            {/* Botões de Ação - Desktop */}
+            <div className="hidden sm:flex items-center space-x-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowImportModal(true)}
@@ -311,7 +347,48 @@ const Dashboard: React.FC = () => {
                 </button>
               </div>
               
-              <LoginComponent />
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadCount}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+              />
+            </div>
+
+            {/* Botões de Ação - Mobile */}
+            <div className="flex sm:hidden items-center space-x-2">
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="btn-primary flex items-center gap-1 px-2 py-1.5 text-xs"
+                disabled={isLoading}
+              >
+                <Upload className="w-3 h-3" />
+                <span className="hidden xs:inline">Importar</span>
+              </button>
+              
+              <button
+                onClick={() => window.open('https://upload-imagens.onrender.com/', '_blank')}
+                className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
+              >
+                <Camera className="w-3 h-3" />
+                <span className="hidden xs:inline">Imagens</span>
+              </button>
+              
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
+                disabled={isLoading || filteredData.length === 0}
+              >
+                <Edit3 className="w-3 h-3" />
+                <span className="hidden xs:inline">Editar</span>
+              </button>
+              
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadCount}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+              />
             </div>
           </div>
         </div>
@@ -377,44 +454,38 @@ const Dashboard: React.FC = () => {
               currentUser={currentUser}
               onAddComment={handleAddComment}
               lightbox={lightbox}
+              sortOptions={sortOptions}
+              onSort={handleSort}
             />
       </div>
 
-      {/* Footer com informações adicionais */}
+      {/* Footer com funcionalidades do sistema */}
       <main className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mt-8 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
             <div>
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Sistema de Imagens</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Sistema de Imagens</h3>
+              <p className="text-xs text-gray-600">
                 As imagens são carregadas automaticamente usando o PHOTO NO como referência
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Tooltips Informativos</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Tooltips Informativos</h3>
+              <p className="text-xs text-gray-600">
                 Passe o mouse sobre os campos REMARK, OBS e OBSERVATIONS EXTRA para ver detalhes completos
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Imagens clicáveis</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Imagens clicáveis</h3>
+              <p className="text-xs text-gray-600">
                 Interface otimizada para desktop, tablet e dispositivos móveis
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Firebase Database</h3>
-              <p className="text-xs text-gray-500">
-                {isConnected 
-                  ? "Dados salvos automaticamente na nuvem com sincronização em tempo real"
-                  : "Configure as regras do Firestore para habilitar a sincronização na nuvem"
-                }
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Firebase Database</h3>
+              <p className="text-xs text-gray-600">
+                Dados salvos automaticamente na nuvem com sincronização em tempo real
               </p>
-              {!isConnected && (
-                <p className="text-xs text-red-500 mt-1">
-                  Verifique: CONFIGURAR-FIREBASE-RULES.md
-                </p>
-              )}
             </div>
           </div>
         </div>

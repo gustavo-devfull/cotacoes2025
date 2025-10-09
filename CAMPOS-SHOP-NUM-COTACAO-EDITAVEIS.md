@@ -232,3 +232,8 @@ const handleUpdateItem = (item: CotacaoItem, field: keyof CotacaoItem, value: st
 
 **Campos SHOP NO e NUM COTACAO editáveis - duplo clique para editar! ✨**
 
+
+
+
+
+

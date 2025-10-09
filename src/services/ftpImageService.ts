@@ -55,16 +55,24 @@ class FTPImageService {
    */
   private async checkImageExists(imageUrl: string): Promise<boolean> {
     try {
-      await fetch(imageUrl, {
-        method: 'HEAD',
-        mode: 'no-cors', // Para evitar problemas de CORS
+      // Usar uma abordagem mais robusta: tentar carregar a imagem diretamente
+      const response = await fetch(imageUrl, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache'
       });
       
-      // Com no-cors, não conseguimos verificar o status code
-      // Mas se não der erro, assumimos que existe
-      return true;
-    } catch (error) {
+      // Verificar se a resposta é válida
+      if (response.ok && response.headers.get('content-type')?.startsWith('image/')) {
+        return true;
+      }
+      
       return false;
+    } catch (error) {
+      // Se der erro de CORS ou rede, assumir que a imagem existe
+      // e deixar o componente de imagem lidar com o erro de carregamento
+      console.warn(`Aviso: Não foi possível verificar existência da imagem ${imageUrl}:`, error);
+      return true; // Assumir que existe para tentar carregar
     }
   }
 

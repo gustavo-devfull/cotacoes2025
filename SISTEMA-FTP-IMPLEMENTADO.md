@@ -258,3 +258,8 @@ Firebase → URLs → Carregamento das imagens do FTP
 
 **Teste o sistema completo de comentários com upload de imagens via FTP! ✨**
 
+
+
+
+
+

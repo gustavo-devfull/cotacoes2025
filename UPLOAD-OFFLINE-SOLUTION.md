@@ -202,3 +202,8 @@ const handleSendMessage = async () => {
 
 **O sistema agora funciona perfeitamente, com ou sem backend! 🎉**
 
+
+
+
+
+

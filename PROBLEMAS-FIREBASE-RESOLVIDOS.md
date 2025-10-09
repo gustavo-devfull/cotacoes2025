@@ -337,3 +337,8 @@ const addComment = async (productId: string, message: string, images: string[], 
 
 **Configure as regras do Firebase e teste o sistema completo! ✨**
 
+
+
+
+
+

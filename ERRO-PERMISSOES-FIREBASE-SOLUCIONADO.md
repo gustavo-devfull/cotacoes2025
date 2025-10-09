@@ -171,3 +171,8 @@ if (error instanceof Error && error.message.includes('permissions')) {
 
 **Configure as regras do Firestore para habilitar a sincronização na nuvem! ✨**
 
+
+
+
+
+

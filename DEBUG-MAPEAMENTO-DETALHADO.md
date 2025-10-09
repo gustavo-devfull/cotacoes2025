@@ -149,3 +149,8 @@ REF encontrado: UNKNOWN
 
 **Debug implementado - aguardando testes para identificar a causa raiz! ✨**
 
+
+
+
+
+

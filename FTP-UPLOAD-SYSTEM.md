@@ -347,3 +347,8 @@ curl http://localhost:3002/api/list-ftp
 
 **Imagens agora são salvas no servidor FTP real com URLs públicas! ✨**
 
+
+
+
+
+

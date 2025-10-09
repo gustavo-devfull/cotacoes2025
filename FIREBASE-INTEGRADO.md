@@ -377,3 +377,8 @@ const unsubscribe = subscribeToCotacoes((cotacoes: CotacaoDocument[]) => {
 
 **Firebase integrado - dados persistidos na nuvem com sincronização em tempo real! ✨**
 
+
+
+
+
+

@@ -265,3 +265,8 @@
 
 **Centralização perfeita - card de 1400px centralizado na página! ✨**
 
+
+
+
+
+

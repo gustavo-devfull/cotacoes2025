@@ -67,3 +67,8 @@ curl http://localhost:3002/api/test-ftp
 
 **Configure as regras Firebase para resolver o erro! 🔧**
 
+
+
+
+
+

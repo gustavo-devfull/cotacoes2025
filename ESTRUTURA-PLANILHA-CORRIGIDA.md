@@ -215,3 +215,8 @@ Primeiro header: COTAÇÃO DE PRODUTOS - EXEMPLO Tipo: string
 
 **Estrutura da planilha corrigida - linha 3 como cabeçalhos funcionando! ✨**
 
+
+
+
+
+

@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, getDoc, setDoc } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -20,9 +21,34 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firestore
 export const db = getFirestore(app);
 
-// Collection name for cotacoes
+// Initialize Auth
+export const auth = getAuth(app);
+
+// Collection names
 export const COTACOES_COLLECTION = "cotacoes";
+export const USERS_COLLECTION = "users";
 
 // Export Firebase functions
-export { addDoc, getDocs, updateDoc, deleteDoc, doc, collection, query, orderBy, onSnapshot };
+export { 
+  addDoc, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  collection, 
+  query, 
+  orderBy, 
+  onSnapshot,
+  getDoc,
+  setDoc,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  type FirebaseUser
+};
+
+
+
+
 

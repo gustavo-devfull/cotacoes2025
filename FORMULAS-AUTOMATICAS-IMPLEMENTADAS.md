@@ -345,3 +345,8 @@ const calculateDependentFields = (updatedItem: CotacaoItem): CotacaoItem => {
 
 **Fórmulas automáticas ativas - edite CTNS, UNIT/CTN, U.PRICE RMB, dimensões e pesos! ✨**
 
+
+
+
+
+

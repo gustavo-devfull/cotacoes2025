@@ -100,3 +100,8 @@ O sistema agora tem logs detalhados que vão mostrar exatamente:
 
 **Teste agora e verifique os logs no console para identificar o problema! 🔍**
 
+
+
+
+
+

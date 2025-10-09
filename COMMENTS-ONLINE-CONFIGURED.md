@@ -282,3 +282,8 @@ curl http://localhost:3002/api/test-ftp
 
 **Sistema funcionando com Firebase + FTP! ✨**
 
+
+
+
+
+

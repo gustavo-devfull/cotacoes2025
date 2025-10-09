@@ -121,3 +121,8 @@ curl -I https://gpreto.space/images/products/CHDJ25001.jpg
 
 **Sistema totalmente funcional e pronto para uso! 🚀**
 
+
+
+
+
+

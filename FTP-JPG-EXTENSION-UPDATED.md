@@ -179,3 +179,8 @@ console.log('URL:', imageUrl);
 
 **Sistema pronto para carregar imagens .jpg do FTP! 🚀**
 
+
+
+
+
+

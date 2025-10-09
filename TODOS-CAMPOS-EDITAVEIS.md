@@ -321,3 +321,8 @@ interface EditableCellProps {
 
 **Todos os campos editáveis implementados - duplo clique para editar qualquer campo! ✨**
 
+
+
+
+
+

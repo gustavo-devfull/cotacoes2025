@@ -181,3 +181,8 @@ Primeiro header: undefined Tipo: undefined
 
 **Erro "header.trim is not a function" resolvido - sistema funcionando! ✨**
 
+
+
+
+
+

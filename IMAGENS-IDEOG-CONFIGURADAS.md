@@ -180,3 +180,8 @@ server: hcdn
 
 **Sistema de imagens totalmente operacional! ✨**
 
+
+
+
+
+

@@ -272,3 +272,8 @@
 
 **Tabela destacada com 1400px - mais espaço para visualizar os produtos! ✨**
 
+
+
+
+
+

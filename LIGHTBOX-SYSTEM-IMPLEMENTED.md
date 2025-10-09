@@ -173,3 +173,8 @@ lightbox.openLightbox(['img1.jpg', 'img2.jpg', 'img3.jpg'], 1, 'Galeria');
 
 **O usuário agora pode clicar em qualquer imagem do sistema para visualizá-la em tamanho completo com navegação intuitiva! 🚀**
 
+
+
+
+
+

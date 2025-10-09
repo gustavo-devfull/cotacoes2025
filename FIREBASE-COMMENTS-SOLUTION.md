@@ -255,3 +255,8 @@ service cloud.firestore {
 
 **Os erros de permissão foram completamente resolvidos! ✨**
 
+
+
+
+
+

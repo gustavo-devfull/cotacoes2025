@@ -298,3 +298,8 @@ export interface User {
 
 **Comunicação eficiente - comentários com imagens por produto! ✨**
 
+
+
+
+
+

@@ -43,8 +43,13 @@ export const useComments = () => {
     return () => unsubscribe();
   }, []);
 
-
-  const addComment = async (productId: string, message: string, imageUrls: string[], user: { id: string; name: string }) => {
+  const addComment = async (
+    productId: string, 
+    message: string, 
+    imageUrls: string[], 
+    user: { id: string; name: string },
+    productInfo?: { shopNo: string; ref: string; description: string }
+  ) => {
     try {
       // Sempre usar Firebase - modo online apenas
       await addDoc(collection(db, 'comments'), {
@@ -57,6 +62,25 @@ export const useComments = () => {
       });
       
       console.log('Comentário salvo no Firebase com sucesso');
+      
+      // Criar notificação se informações do produto foram fornecidas
+      if (productInfo) {
+        await addDoc(collection(db, 'notifications'), {
+          type: 'comment',
+          productId,
+          productInfo,
+          commentInfo: {
+            userId: user.id,
+            userName: user.name,
+            message,
+            timestamp: new Date()
+          },
+          isRead: false,
+          createdAt: new Date()
+        });
+        
+        console.log('Notificação criada com sucesso');
+      }
     } catch (error: any) {
       console.error('Erro ao adicionar comentário no Firebase:', error);
       setFirebaseError(`Erro ao salvar comentário: ${error.message}`);

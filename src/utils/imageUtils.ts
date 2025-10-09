@@ -66,3 +66,8 @@ export const validateFileType = (file: File): boolean => {
   return allowedTypes.includes(file.type);
 };
 
+
+
+
+
+

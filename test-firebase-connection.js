@@ -54,3 +54,8 @@ console.log('2. Projeto: animagic-landing');
 console.log('3. Firestore Database → Rules');
 console.log('4. Cole as regras e publique');
 
+
+
+
+
+

@@ -143,3 +143,8 @@ T608,Carrinho de carga,拉杆车,...
 
 **Erro de mapeamento resolvido - importação funcionando perfeitamente! ✨**
 
+
+
+
+
+
