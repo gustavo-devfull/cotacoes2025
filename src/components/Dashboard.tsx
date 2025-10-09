@@ -53,16 +53,18 @@ const Dashboard: React.FC = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { currentUser } = useUser();
   const lightbox = useLightbox();
-  const { showSuccess, showError, showWarning } = useAlertModal();
+  const { showSuccess, showError, showWarning, showInfo } = useAlertModal();
 
   // Reset filtros quando o Dashboard for montado
   useEffect(() => {
+    console.log('🔄 Resetando filtros do Dashboard');
     // Resetar estado de filtros ao montar o componente
     setShowOnlyExported(false);
     setSortOptions({ field: null, direction: null });
     
     // Garantir que todos os dados sejam exibidos
     if (allData.length > 0) {
+      console.log('📊 Aplicando reset de filtros com', allData.length, 'itens');
       setFilteredData(allData);
     }
   }, []); // Executa apenas uma vez ao montar
@@ -138,6 +140,16 @@ const Dashboard: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+
+  // Reset filtros sempre que os dados forem carregados
+  useEffect(() => {
+    if (allData.length > 0) {
+      console.log('🔄 Dados carregados, resetando filtros e exibindo todos os produtos');
+      setShowOnlyExported(false);
+      setSortOptions({ field: null, direction: null });
+      setFilteredData(allData);
+    }
+  }, [allData]);
 
   // Aplicar filtro de produtos exportados quando o estado mudar
   useEffect(() => {
@@ -792,6 +804,25 @@ const Dashboard: React.FC = () => {
                   disabled={selectedProducts.size === 0 && exportedProducts.size === 0}
                 >
                   Limpar Tudo
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const deletedCount = await notificationsService.deleteAllNotifications();
+                      if (deletedCount > 0) {
+                        showSuccess('Notificações Zeradas', `${deletedCount} notificação(ões) excluída(s) com sucesso!`);
+                      } else {
+                        showInfo('Nenhuma Notificação', 'Não há notificações para excluir.');
+                      }
+                    } catch (error) {
+                      console.error('Erro ao zerar notificações:', error);
+                      showError('Erro ao Zerar', 'Erro ao excluir notificações. Verifique o console para mais detalhes.');
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs bg-orange-50 text-orange-700 rounded-md hover:bg-orange-100 transition-colors"
+                  title="Excluir todas as notificações do sistema"
+                >
+                  Zerar Notificações
                 </button>
               </div>
             </div>

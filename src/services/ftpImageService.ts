@@ -49,31 +49,38 @@ class FTPImageService {
   }
 
   /**
-   * Verifica se uma imagem existe no servidor
+   * Verifica se uma imagem existe no servidor usando uma abordagem que evita CORS
    * @param imageUrl - URL da imagem para verificar
    * @returns Promise<boolean>
    */
   private async checkImageExists(imageUrl: string): Promise<boolean> {
-    try {
-      // Usar uma abordagem mais robusta: tentar carregar a imagem diretamente
-      const response = await fetch(imageUrl, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'no-cache'
-      });
+    return new Promise((resolve) => {
+      // Criar um elemento Image para testar se a imagem carrega
+      const img = new Image();
       
-      // Verificar se a resposta é válida
-      if (response.ok && response.headers.get('content-type')?.startsWith('image/')) {
-        return true;
-      }
+      // Configurar timeout para evitar espera infinita
+      const timeout = setTimeout(() => {
+        console.warn(`Timeout ao verificar imagem: ${imageUrl}`);
+        resolve(true); // Assumir que existe para tentar carregar
+      }, 5000); // 5 segundos de timeout
       
-      return false;
-    } catch (error) {
-      // Se der erro de CORS ou rede, assumir que a imagem existe
-      // e deixar o componente de imagem lidar com o erro de carregamento
-      console.warn(`Aviso: Não foi possível verificar existência da imagem ${imageUrl}:`, error);
-      return true; // Assumir que existe para tentar carregar
-    }
+      // Quando a imagem carregar com sucesso
+      img.onload = () => {
+        clearTimeout(timeout);
+        console.log(`✅ Imagem verificada com sucesso: ${imageUrl}`);
+        resolve(true);
+      };
+      
+      // Quando houver erro no carregamento
+      img.onerror = () => {
+        clearTimeout(timeout);
+        console.log(`❌ Imagem não encontrada: ${imageUrl}`);
+        resolve(false);
+      };
+      
+      // Tentar carregar a imagem
+      img.src = imageUrl;
+    });
   }
 
   /**

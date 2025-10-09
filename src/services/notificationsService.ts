@@ -4,8 +4,7 @@ import {
   where, 
   getDocs, 
   deleteDoc, 
-  doc,
-  orderBy 
+  doc
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -36,17 +35,26 @@ export const notificationsService = {
    */
   async getNotificationsByProductId(productId: string): Promise<NotificationDocument[]> {
     try {
+      console.log('🔔 Buscando notificações para productId:', productId);
+      
       const q = query(
         collection(db, NOTIFICATIONS_COLLECTION),
-        where('productId', '==', productId),
-        orderBy('createdAt', 'desc')
+        where('productId', '==', productId)
       );
       
       const querySnapshot = await getDocs(q);
       const notifications: NotificationDocument[] = [];
       
+      console.log('📊 Total de notificações encontradas:', querySnapshot.size);
+      
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log('🔔 Notificação encontrada:', {
+          id: doc.id,
+          productId: data.productId,
+          message: data.commentInfo?.message?.substring(0, 30) + '...'
+        });
+        
         notifications.push({
           id: doc.id,
           type: data.type,
@@ -61,9 +69,10 @@ export const notificationsService = {
         });
       });
       
+      console.log('✅ Notificações retornadas:', notifications.length);
       return notifications;
     } catch (error) {
-      console.error('Erro ao buscar notificações por produto:', error);
+      console.error('❌ Erro ao buscar notificações por produto:', error);
       throw error;
     }
   },
@@ -73,30 +82,35 @@ export const notificationsService = {
    */
   async deleteNotificationsByProductId(productId: string): Promise<number> {
     try {
+      console.log('🗑️ Iniciando exclusão de notificações para productId:', productId);
+      
       // Buscar todas as notificações do produto
       const notifications = await this.getNotificationsByProductId(productId);
       
       if (notifications.length === 0) {
-        console.log('Nenhuma notificação encontrada para o produto:', productId);
+        console.log('ℹ️ Nenhuma notificação encontrada para o produto:', productId);
         return 0;
       }
+
+      console.log(`🗑️ Encontradas ${notifications.length} notificações para excluir`);
 
       // Excluir cada notificação
       let deletedCount = 0;
       for (const notification of notifications) {
         try {
+          console.log('🗑️ Excluindo notificação:', notification.id);
           await deleteDoc(doc(db, NOTIFICATIONS_COLLECTION, notification.id));
           deletedCount++;
-          console.log('Notificação excluída:', notification.id);
+          console.log('✅ Notificação excluída com sucesso:', notification.id);
         } catch (error) {
-          console.error('Erro ao excluir notificação:', notification.id, error);
+          console.error('❌ Erro ao excluir notificação:', notification.id, error);
         }
       }
 
-      console.log(`Excluídas ${deletedCount} notificações para o produto:`, productId);
+      console.log(`✅ Exclusão concluída: ${deletedCount}/${notifications.length} notificações excluídas para o produto:`, productId);
       return deletedCount;
     } catch (error) {
-      console.error('Erro ao excluir notificações do produto:', error);
+      console.error('❌ Erro ao excluir notificações do produto:', error);
       throw error;
     }
   },
@@ -130,5 +144,44 @@ export const notificationsService = {
    */
   generateProductId(photoNo: string, ref: string): string {
     return `${photoNo}-${ref}`;
+  },
+
+  /**
+   * Excluir todas as notificações do sistema
+   */
+  async deleteAllNotifications(): Promise<number> {
+    try {
+      console.log('🗑️ Iniciando exclusão de todas as notificações');
+      
+      // Buscar todas as notificações
+      const q = query(collection(db, NOTIFICATIONS_COLLECTION));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.size === 0) {
+        console.log('ℹ️ Nenhuma notificação encontrada para excluir');
+        return 0;
+      }
+
+      console.log(`🗑️ Encontradas ${querySnapshot.size} notificações para excluir`);
+
+      // Excluir cada notificação
+      let deletedCount = 0;
+      for (const docSnapshot of querySnapshot.docs) {
+        try {
+          console.log('🗑️ Excluindo notificação:', docSnapshot.id);
+          await deleteDoc(doc(db, NOTIFICATIONS_COLLECTION, docSnapshot.id));
+          deletedCount++;
+          console.log('✅ Notificação excluída com sucesso:', docSnapshot.id);
+        } catch (error) {
+          console.error('❌ Erro ao excluir notificação:', docSnapshot.id, error);
+        }
+      }
+
+      console.log(`✅ Exclusão concluída: ${deletedCount}/${querySnapshot.size} notificações excluídas`);
+      return deletedCount;
+    } catch (error) {
+      console.error('❌ Erro ao excluir todas as notificações:', error);
+      throw error;
+    }
   }
 };

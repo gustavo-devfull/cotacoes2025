@@ -9,6 +9,8 @@ export const useNotifications = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔔 Iniciando escuta de notificações em tempo real');
+    
     // Escutar notificações em tempo real
     const q = query(
       collection(db, 'notifications'), 
@@ -16,11 +18,20 @@ export const useNotifications = () => {
     );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log('🔔 Snapshot de notificações recebido:', snapshot.size, 'notificações');
+      
       const notificationsData: Notification[] = [];
       let unread = 0;
       
       snapshot.forEach((doc) => {
         const data = doc.data();
+        console.log('🔔 Notificação encontrada:', {
+          id: doc.id,
+          productId: data.productId,
+          message: data.commentInfo?.message?.substring(0, 30) + '...',
+          isRead: data.isRead
+        });
+        
         const notification: Notification = {
           id: doc.id,
           type: data.type,
@@ -40,15 +51,24 @@ export const useNotifications = () => {
         }
       });
       
+      console.log('🔔 Notificações processadas:', {
+        total: notificationsData.length,
+        unread: unread,
+        productIds: notificationsData.map(n => n.productId)
+      });
+      
       setNotifications(notificationsData);
       setUnreadCount(unread);
       setLoading(false);
     }, (error) => {
-      console.error('Erro na escuta de notificações:', error);
+      console.error('❌ Erro na escuta de notificações:', error);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('🔔 Parando escuta de notificações');
+      unsubscribe();
+    };
   }, []);
 
   const createNotification = async (

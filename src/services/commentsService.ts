@@ -4,8 +4,7 @@ import {
   where, 
   getDocs, 
   deleteDoc, 
-  doc,
-  orderBy 
+  doc
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -27,17 +26,26 @@ export const commentsService = {
    */
   async getCommentsByProductId(productId: string): Promise<CommentDocument[]> {
     try {
+      console.log('🔍 Buscando comentários para productId:', productId);
+      
       const q = query(
         collection(db, COMMENTS_COLLECTION),
-        where('productId', '==', productId),
-        orderBy('timestamp', 'desc')
+        where('productId', '==', productId)
       );
       
       const querySnapshot = await getDocs(q);
       const comments: CommentDocument[] = [];
       
+      console.log('📊 Total de comentários encontrados:', querySnapshot.size);
+      
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log('📝 Comentário encontrado:', {
+          id: doc.id,
+          productId: data.productId,
+          message: data.message?.substring(0, 50) + '...'
+        });
+        
         comments.push({
           id: doc.id,
           productId: data.productId,
@@ -49,9 +57,10 @@ export const commentsService = {
         });
       });
       
+      console.log('✅ Comentários retornados:', comments.length);
       return comments;
     } catch (error) {
-      console.error('Erro ao buscar comentários por produto:', error);
+      console.error('❌ Erro ao buscar comentários por produto:', error);
       throw error;
     }
   },
