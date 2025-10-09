@@ -606,7 +606,10 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header 
+        className="shadow-sm border-b border-gray-200 p-4 rounded-2xl"
+        style={{ backgroundColor: '#0175a6' }}
+      >
         <div className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo e Título */}
@@ -615,16 +618,9 @@ const Dashboard: React.FC = () => {
                 <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
               <div className="min-w-0 flex items-center gap-3">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Gerenciar Cotações</h1>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
-                  title="Atualizar página"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
+                <h1 className="text-lg sm:text-xl font-light text-white truncate">
+                  Gerenciar Cotações
+                </h1>
               </div>
             </div>
             
@@ -838,10 +834,35 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Package className="w-6 h-6 text-primary-600" />
-              Cotações ({filteredData.length} itens)
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-light text-gray-900 flex items-center gap-2">
+                <Package className="w-6 h-6 text-primary-600" />
+                Cotações ({filteredData.length} itens)
+              </h2>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
+                title="Atualizar tabela de produtos"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  const tableElement = document.querySelector('.cotacoes-table');
+                  if (tableElement) {
+                    tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+                className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
+                title="Ir para tabela de produtos"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
             
             {filteredData.length !== allData.length && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -860,6 +881,7 @@ const Dashboard: React.FC = () => {
           />
         </div>
         
+        <div className="cotacoes-table">
             <CotacoesTable
               data={filteredData}
               onUpdateItem={handleUpdateItem}
@@ -875,6 +897,7 @@ const Dashboard: React.FC = () => {
               exportedProducts={exportedProducts}
               onToggleProductSelection={toggleProductSelection}
             />
+        </div>
       </div>
 
       {/* Footer com funcionalidades do sistema */}

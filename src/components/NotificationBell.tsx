@@ -37,7 +37,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
       {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors duration-200"
+        className="relative p-2 text-white hover:text-[#0175a6] hover:bg-white rounded-full transition-colors duration-200"
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (

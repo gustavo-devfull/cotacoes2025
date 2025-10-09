@@ -8,6 +8,7 @@ import LoginForm from './LoginForm';
 import FirestoreSetup from './FirestoreSetup';
 import { AlertProvider } from './AlertModal';
 import RaviLogo from '../assets/RAVI-LOGO-BRANCO.svg';
+import FundoImage from '../assets/fundo.jpg';
 
 const App: React.FC = () => {
   const { currentUser, loading, hasPermissionError } = useUser();
@@ -52,17 +53,35 @@ const App: React.FC = () => {
   // Se não estiver logado, mostrar página de login
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
-        <div className="max-w-md w-full space-y-8 px-4">
+      <div 
+        className="min-h-screen flex items-center justify-center relative"
+        style={{
+          backgroundImage: `url(${FundoImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Overlay azul escuro transparente */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            backgroundColor: '#144372',
+            opacity: 0.8
+          }}
+        ></div>
+        
+        {/* Conteúdo da tela de login */}
+        <div className="relative z-10 max-w-md w-full space-y-8 px-4">
           <div className="text-center">
             <div className="flex justify-center mb-6">
               <img 
                 src={RaviLogo} 
                 alt="RAVI Logo" 
-                className="h-16 w-auto"
+                className="h-24 w-auto"
               />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h2 className="text-3xl font-light text-white mb-2">
               Sistema de Cotações
             </h2>
           </div>
