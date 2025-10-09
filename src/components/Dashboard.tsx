@@ -747,7 +747,7 @@ const Dashboard: React.FC = () => {
       </main>
 
       {/* Tabela de Cotações - Fora do container principal para centralização perfeita */}
-      <div className="mb-2">
+      <div className="mb-2 h-[calc(100%+150px)]">
         <div className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Controles de Seleção */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
@@ -899,38 +899,6 @@ const Dashboard: React.FC = () => {
             />
         </div>
       </div>
-
-      {/* Footer com funcionalidades do sistema */}
-      <main className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mt-8 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-2">Sistema de Imagens</h3>
-              <p className="text-xs text-gray-600">
-                As imagens são carregadas automaticamente usando o PHOTO NO como referência
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-2">Tooltips Informativos</h3>
-              <p className="text-xs text-gray-600">
-                Passe o mouse sobre os campos REMARK, OBS e OBSERVATIONS EXTRA para ver detalhes completos
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-2">Imagens clicáveis</h3>
-              <p className="text-xs text-gray-600">
-                Interface otimizada para desktop, tablet e dispositivos móveis
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-2">Firebase Database</h3>
-              <p className="text-xs text-gray-600">
-                Dados salvos automaticamente na nuvem com sincronização em tempo real
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
 
       {/* Modal de Importação */}
       {showImportModal && (

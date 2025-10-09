@@ -144,7 +144,7 @@ interface EditableCellProps {
   field: keyof CotacaoItem;
   item: CotacaoItem;
   onUpdate: (item: CotacaoItem, field: keyof CotacaoItem, value: string | number) => void;
-  type?: 'text' | 'number';
+  type?: 'text' | 'number' | 'textarea';
   className?: string;
 }
 
@@ -159,13 +159,19 @@ const EditableCell: React.FC<EditableCellProps> = ({
   const [isEditing, setIsEditing] = React.useState(false);
   const [editValue, setEditValue] = React.useState(String(value));
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   React.useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+    if (isEditing) {
+      if (type === 'textarea' && textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.select();
+      } else if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
     }
-  }, [isEditing]);
+  }, [isEditing, type]);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -192,6 +198,20 @@ const EditableCell: React.FC<EditableCellProps> = ({
   };
 
   if (isEditing) {
+    if (type === 'textarea') {
+      return (
+        <textarea
+          ref={textareaRef}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+          rows={3}
+          className={`w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${className}`}
+        />
+      );
+    }
+    
     return (
       <input
         ref={inputRef}
@@ -526,7 +546,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       field="obs" 
                       item={item} 
                       onUpdate={onUpdateItem}
-                      type="text"
+                      type="textarea"
                     />
                   ) : (
                     <Tooltip content={item.obs}>
