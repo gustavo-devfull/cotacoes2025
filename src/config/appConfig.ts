@@ -48,7 +48,7 @@ export const appConfig = {
     // Delay para busca em tempo real (ms)
     debounceDelay: 300,
     // Campos pesquisáveis
-    searchableFields: ['PHOTO_NO', 'DESCRIPTION', 'NAME', 'SHOP_NO']
+    searchableFields: ['PHOTO_NO', 'DESCRIPTION', 'NAME', 'SHOP_NO', 'OBS']
   },
 
   // Configurações de tema

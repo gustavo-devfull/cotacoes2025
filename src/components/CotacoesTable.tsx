@@ -146,6 +146,7 @@ interface EditableCellProps {
   onUpdate: (item: CotacaoItem, field: keyof CotacaoItem, value: string | number) => void;
   type?: 'text' | 'number' | 'textarea';
   className?: string;
+  bgColor?: string; // Nova prop para cor de fundo
 }
 
 const EditableCell: React.FC<EditableCellProps> = ({ 
@@ -154,7 +155,8 @@ const EditableCell: React.FC<EditableCellProps> = ({
   item, 
   onUpdate, 
   type = 'text',
-  className = ''
+  className = '',
+  bgColor = ''
 }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editValue, setEditValue] = React.useState(String(value));
@@ -207,7 +209,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
           rows={3}
-          className={`w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${className}`}
+          className={`w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${bgColor} ${className}`}
         />
       );
     }
@@ -220,7 +222,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
         onChange={(e) => setEditValue(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
-        className={`w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+        className={`w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${bgColor} ${className}`}
       />
     );
   }
@@ -608,7 +610,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                 <td className="table-cell text-center font-medium text-blue-600 border-r border-gray-200 w-[100px]">
                   {formatNumber(item.qty)}
                 </td>
-                <td className="table-cell text-right font-medium border-r border-gray-200 w-[150px]">
+                <td className="table-cell text-right font-medium border-r border-gray-200 w-[150px] bg-green-100">
                   {onUpdateItem ? (
                     <EditableCell 
                       value={item.unitPriceRmb} 
@@ -616,6 +618,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       item={item} 
                       onUpdate={onUpdateItem}
                       type="number"
+                      bgColor="bg-green-100"
                     />
                   ) : (
                     `¥ ${formatNumber(item.unitPriceRmb, 2)}`

@@ -48,7 +48,8 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
         item.referencia.toLowerCase().includes(searchTerm) ||
         item.description.toLowerCase().includes(searchTerm) ||
         item.name.toLowerCase().includes(searchTerm) ||
-        item.SHOP_NO.toLowerCase().includes(searchTerm)
+        item.SHOP_NO.toLowerCase().includes(searchTerm) ||
+        (item.obs && item.obs.toLowerCase().includes(searchTerm)) // ADICIONADO: Campo OBS
       );
     }
 
