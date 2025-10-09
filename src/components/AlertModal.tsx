@@ -67,8 +67,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
   title,
   message,
   onClose,
-  showCloseButton = true,
-  autoClose = true
+  showCloseButton = true
 }) => {
   const getIcon = () => {
     switch (type) {

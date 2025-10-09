@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { LogIn, UserPlus, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 const LoginForm: React.FC = () => {
-  const { signIn, signUp } = useUser();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { signIn } = useUser();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -30,33 +29,15 @@ const LoginForm: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      if (isSignUp) {
-        // Validações para cadastro
-        if (!formData.name.trim()) {
-          throw new Error('Nome é obrigatório');
-        }
-        if (!formData.email.trim()) {
-          throw new Error('Email é obrigatório');
-        }
-        if (formData.password.length < 6) {
-          throw new Error('Senha deve ter pelo menos 6 caracteres');
-        }
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error('Senhas não coincidem');
-        }
-
-        await signUp(formData.email, formData.password, formData.name);
-      } else {
-        // Validações para login
-        if (!formData.email.trim()) {
-          throw new Error('Email é obrigatório');
-        }
-        if (!formData.password.trim()) {
-          throw new Error('Senha é obrigatória');
-        }
-
-        await signIn(formData.email, formData.password);
+      // Validações para login
+      if (!formData.email.trim()) {
+        throw new Error('Email é obrigatório');
       }
+      if (!formData.password.trim()) {
+        throw new Error('Senha é obrigatória');
+      }
+
+      await signIn(formData.email, formData.password);
 
       // Limpar formulário
       setFormData({
@@ -73,38 +54,9 @@ const LoginForm: React.FC = () => {
     }
   };
 
-  const toggleMode = () => {
-    setIsSignUp(!isSignUp);
-    setError('');
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    });
-  };
-
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {isSignUp && (
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Nome Completo
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              placeholder="Digite seu nome completo"
-              required={isSignUp}
-            />
-          </div>
-        )}
-
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
             Email
@@ -146,24 +98,6 @@ const LoginForm: React.FC = () => {
           </div>
         </div>
 
-        {isSignUp && (
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirmar Senha
-            </label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              placeholder="Confirme sua senha"
-              required={isSignUp}
-            />
-          </div>
-        )}
-
         <div className="pt-4">
           <button
             type="submit"
@@ -174,8 +108,8 @@ const LoginForm: React.FC = () => {
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <>
-                {isSignUp ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-                {isSignUp ? 'Criar Conta' : 'Entrar'}
+                <LogIn className="w-5 h-5" />
+                Entrar
               </>
             )}
           </button>

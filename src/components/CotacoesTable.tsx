@@ -4,7 +4,6 @@ import { Eye, Loader2, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import CommentsComponent from './CommentsComponent';
 import ProductToggle from './ProductToggle';
 import { ftpImageService } from '../services/ftpImageService';
-import { formatDateToBrazilian } from '../utils/dateUtils';
 import SortableHeader from './SortableHeader';
 
 // Componente para exibir imagem do produto
