@@ -6,6 +6,7 @@ import UserProfile from './UserProfile';
 import UserManagement from './UserManagement';
 import LoginForm from './LoginForm';
 import FirestoreSetup from './FirestoreSetup';
+import { AlertProvider } from './AlertModal';
 import RaviLogo from '../assets/RAVI-LOGO-BRANCO.svg';
 
 const App: React.FC = () => {
@@ -51,7 +52,7 @@ const App: React.FC = () => {
   // Se não estiver logado, mostrar página de login
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
         <div className="max-w-md w-full space-y-8 px-4">
           <div className="text-center">
             <div className="flex justify-center mb-6">
@@ -64,20 +65,8 @@ const App: React.FC = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Sistema de Cotações
             </h2>
-            <p className="text-gray-600">
-              Faça login para acessar o sistema
-            </p>
           </div>
           <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Faça login para continuar
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Digite suas credenciais para acessar o sistema
-              </p>
-            </div>
-            
             {/* Formulário de Login Direto */}
             <LoginForm />
           </div>
@@ -87,14 +76,16 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {renderPage()}
-        </div>
-      </main>
-    </div>
+    <AlertProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {renderPage()}
+          </div>
+        </main>
+      </div>
+    </AlertProvider>
   );
 };
 

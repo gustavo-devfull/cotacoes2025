@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, X, Download } from 'lucide-react';
 import { CotacaoItem } from '../types';
 import { convertSpreadsheetRowToCotacao, validateImportedData, SpreadsheetRow } from '../utils/spreadsheetMapping';
+import { useAlertModal } from '../hooks/useAlertModal';
 
 interface ImportComponentProps {
   onImportComplete: (data: CotacaoItem[]) => void;
@@ -11,6 +12,7 @@ interface ImportComponentProps {
 type ImportType = 'standard' | 'line2-headers';
 
 const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onClose }) => {
+  const { showError, showWarning } = useAlertModal();
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [shopNo, setShopNo] = useState<string>('');
@@ -34,32 +36,32 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     
     if (!['csv', 'xlsx', 'xls'].includes(fileExtension || '')) {
-      alert('Por favor, selecione um arquivo CSV ou Excel (.csv, .xlsx, .xls)');
+      showError('Formato Inválido', 'Por favor, selecione um arquivo CSV ou Excel (.csv, .xlsx, .xls)');
       return;
     }
 
     if (!shopNo.trim()) {
-      alert('Por favor, preencha o campo SHOP NO antes de importar a planilha');
+      showWarning('Campo Obrigatório', 'Por favor, preencha o campo SHOP NO antes de importar a planilha');
       return;
     }
 
     if (!nomeContato.trim()) {
-      alert('Por favor, preencha o campo Nome do Contato antes de importar a planilha');
+      showWarning('Campo Obrigatório', 'Por favor, preencha o campo Nome do Contato antes de importar a planilha');
       return;
     }
 
     if (!telefoneContato.trim()) {
-      alert('Por favor, preencha o campo Telefone do Contato antes de importar a planilha');
+      showWarning('Campo Obrigatório', 'Por favor, preencha o campo Telefone do Contato antes de importar a planilha');
       return;
     }
 
     if (!dataCotacao.trim()) {
-      alert('Por favor, preencha o campo Data da Cotação antes de importar a planilha');
+      showWarning('Campo Obrigatório', 'Por favor, preencha o campo Data da Cotação antes de importar a planilha');
       return;
     }
 
     if (!segmento.trim()) {
-      alert('Por favor, preencha o campo Segmento antes de importar a planilha');
+      showWarning('Campo Obrigatório', 'Por favor, preencha o campo Segmento antes de importar a planilha');
       return;
     }
 
@@ -243,7 +245,7 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
         errorMessage = 'Erro: A planilha deve ter pelo menos 2 linhas (cabeçalho + dados).';
       }
       
-      alert(errorMessage);
+      showError('Erro no Processamento', errorMessage);
     } finally {
       setIsProcessing(false);
     }

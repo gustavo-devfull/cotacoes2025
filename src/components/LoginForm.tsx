@@ -86,12 +86,6 @@ const LoginForm: React.FC = () => {
 
   return (
     <>
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-4">
         {isSignUp && (
           <div>
@@ -188,17 +182,11 @@ const LoginForm: React.FC = () => {
         </div>
       </form>
 
-      <div className="mt-6 text-center">
-        <button
-          onClick={toggleMode}
-          className="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200 font-medium"
-        >
-          {isSignUp 
-            ? 'Já tem uma conta? Faça login' 
-            : 'Não tem uma conta? Criar conta'
-          }
-        </button>
-      </div>
+      {error && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600 text-center">{error}</p>
+        </div>
+      )}
     </>
   );
 };

@@ -11,9 +11,12 @@ import { useComments } from '../hooks/useComments';
 import { useNotifications } from '../hooks/useNotifications';
 import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
-import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3 } from 'lucide-react';
+import { useAlertModal } from '../hooks/useAlertModal';
+import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { sortData, getNextSortDirection } from '../utils/sortUtils';
+import { exportToExcel, formatDateForFilename } from '../utils/excelExport';
+import { productSelectionService } from '../services/productSelectionService';
 import { 
   getCotacoes, 
   updateCotacao, 
@@ -37,11 +40,18 @@ const Dashboard: React.FC = () => {
     direction: null
   });
   
+  // Estados para exportação
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [exportedProducts, setExportedProducts] = useState<Set<string>>(new Set());
+  const [isExporting, setIsExporting] = useState(false);
+  const [showOnlyExported, setShowOnlyExported] = useState(false);
+  
   // Hooks para comentários, notificações e usuário
   const { comments, addComment, firebaseError } = useComments();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { currentUser } = useUser();
   const lightbox = useLightbox();
+  const { showSuccess, showError, showWarning } = useAlertModal();
 
   // Carregar dados do Firebase na inicialização
   useEffect(() => {
@@ -74,6 +84,27 @@ const Dashboard: React.FC = () => {
     loadData();
   }, []);
 
+  // Carregar estados de seleção e exportação salvos
+  useEffect(() => {
+    const loadSelectionStates = async () => {
+      if (!currentUser?.id) return;
+
+      try {
+        const states = await productSelectionService.loadSelectionState(currentUser.id);
+        setSelectedProducts(states.selectedProducts);
+        setExportedProducts(states.exportedProducts);
+        console.log('Estados de seleção carregados:', {
+          selected: states.selectedProducts.size,
+          exported: states.exportedProducts.size
+        });
+      } catch (error) {
+        console.error('Erro ao carregar estados de seleção:', error);
+      }
+    };
+
+    loadSelectionStates();
+  }, [currentUser?.id]);
+
   // Escutar mudanças em tempo real do Firebase
   useEffect(() => {
     const unsubscribe = subscribeToCotacoes((cotacoes: CotacaoDocument[]) => {
@@ -85,6 +116,12 @@ const Dashboard: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // Aplicar filtro de produtos exportados quando o estado mudar
+  useEffect(() => {
+    const filteredByExported = applyExportedFilter(allData);
+    const sortedData = sortData(filteredByExported, sortOptions);
+    setFilteredData(sortedData);
+  }, [showOnlyExported, exportedProducts, allData, sortOptions]);
 
   // Função para aplicar filtros
   const handleFilterChange = (newFilteredData: CotacaoItem[]) => {
@@ -107,6 +144,17 @@ const Dashboard: React.FC = () => {
     setFilteredData(sortedData);
   };
 
+  // Função para aplicar filtro de produtos exportados
+  const applyExportedFilter = (data: CotacaoItem[]) => {
+    if (showOnlyExported) {
+      return data.filter(item => {
+        const productId = `${item.PHOTO_NO}-${item.referencia}`;
+        return exportedProducts.has(productId);
+      });
+    }
+    return data;
+  };
+
   const handleImportComplete = async (importedData: CotacaoItem[]) => {
     try {
       setIsLoading(true);
@@ -116,7 +164,7 @@ const Dashboard: React.FC = () => {
       setShowImportModal(false);
     } catch (error) {
       console.error('Erro ao salvar dados importados:', error);
-      alert('Erro ao salvar dados importados. Verifique o console para mais detalhes.');
+      showError('Erro na Importação', 'Erro ao salvar dados importados. Verifique o console para mais detalhes.');
     } finally {
       setIsLoading(false);
     }
@@ -187,7 +235,7 @@ const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao atualizar item no Firebase:', error);
-      alert('Erro ao atualizar item. Verifique o console para mais detalhes.');
+      showError('Erro na Atualização', 'Erro ao atualizar item. Verifique o console para mais detalhes.');
     }
   };
 
@@ -234,10 +282,10 @@ const Dashboard: React.FC = () => {
       setFilteredData(prev => prev.filter(i => !itemIds.includes(`${i.PHOTO_NO}-${i.referencia}`)));
       
       setShowEditModal(false);
-      alert(`${items.length} produto(s) excluído(s) com sucesso!`);
+      showSuccess('Exclusão Concluída', `${items.length} produto(s) excluído(s) com sucesso!`);
     } catch (error) {
       console.error('Erro ao excluir itens:', error);
-      alert('Erro ao excluir itens. Verifique o console para mais detalhes.');
+      showError('Erro na Exclusão', 'Erro ao excluir itens. Verifique o console para mais detalhes.');
     }
   };
 
@@ -260,7 +308,7 @@ const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao deletar item do Firebase:', error);
-      alert('Erro ao deletar item. Verifique o console para mais detalhes.');
+      showError('Erro na Exclusão', 'Erro ao deletar item. Verifique o console para mais detalhes.');
     } finally {
       setShowDeleteModal(false);
       setItemToDelete(null);
@@ -274,7 +322,7 @@ const Dashboard: React.FC = () => {
 
   const handleAddComment = async (productId: string, message: string, imageUrls: string[]) => {
     if (!currentUser) {
-      alert('Você precisa estar logado para comentar.');
+      showWarning('Login Necessário', 'Você precisa estar logado para comentar.');
       return;
     }
 
@@ -297,7 +345,129 @@ const Dashboard: React.FC = () => {
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      alert(`Erro ao adicionar comentário: ${errorMessage}`);
+      showError('Erro no Comentário', `Erro ao adicionar comentário: ${errorMessage}`);
+    }
+  };
+
+  // Funções para gerenciar seleção de produtos
+  const toggleProductSelection = async (productId: string) => {
+    const newSelectedProducts = new Set(selectedProducts);
+    if (newSelectedProducts.has(productId)) {
+      newSelectedProducts.delete(productId);
+    } else {
+      newSelectedProducts.add(productId);
+    }
+    
+    setSelectedProducts(newSelectedProducts);
+
+    // Salvar no Firebase
+    if (currentUser?.id) {
+      try {
+        await productSelectionService.updateSelectedProducts(currentUser.id, newSelectedProducts);
+      } catch (error) {
+        console.error('Erro ao salvar seleção:', error);
+      }
+    }
+  };
+
+  const selectAllProducts = async () => {
+    const allProductIds = filteredData.map(item => `${item.PHOTO_NO}-${item.referencia}`);
+    const newSelectedProducts = new Set(allProductIds);
+    setSelectedProducts(newSelectedProducts);
+
+    // Salvar no Firebase
+    if (currentUser?.id) {
+      try {
+        await productSelectionService.updateSelectedProducts(currentUser.id, newSelectedProducts);
+      } catch (error) {
+        console.error('Erro ao salvar seleção:', error);
+      }
+    }
+  };
+
+  const deselectAllProducts = async () => {
+    const newSelectedProducts = new Set<string>();
+    setSelectedProducts(newSelectedProducts);
+
+    // Salvar no Firebase
+    if (currentUser?.id) {
+      try {
+        await productSelectionService.updateSelectedProducts(currentUser.id, newSelectedProducts);
+      } catch (error) {
+        console.error('Erro ao salvar seleção:', error);
+      }
+    }
+  };
+
+  const getSelectedProductsData = (): CotacaoItem[] => {
+    return filteredData.filter(item => 
+      selectedProducts.has(`${item.PHOTO_NO}-${item.referencia}`)
+    );
+  };
+
+  // Função para exportar produtos selecionados
+  const handleExportSelectedProducts = async () => {
+    const selectedData = getSelectedProductsData();
+    
+    if (selectedData.length === 0) {
+      showWarning('Nenhuma Seleção', 'Nenhum produto selecionado para exportação.');
+      return;
+    }
+
+    setIsExporting(true);
+    
+    try {
+      const filename = formatDateForFilename();
+      exportToExcel(selectedData, {
+        filename,
+        sheetName: 'Produtos Selecionados',
+        includeHeaders: true
+      });
+
+      // Marcar produtos como exportados e desmarcar seleção
+      const exportedIds = selectedData.map(item => `${item.PHOTO_NO}-${item.referencia}`);
+      const newExportedProducts = new Set([...exportedProducts, ...exportedIds]);
+      const newSelectedProducts = new Set<string>();
+      
+      setExportedProducts(newExportedProducts);
+      setSelectedProducts(newSelectedProducts);
+
+      // Salvar estados no Firebase
+      if (currentUser?.id) {
+        try {
+          await productSelectionService.saveSelectionState(
+            currentUser.id, 
+            newSelectedProducts, 
+            newExportedProducts
+          );
+        } catch (error) {
+          console.error('Erro ao salvar estados de exportação:', error);
+        }
+      }
+
+      // Atualizar dados locais para refletir o estado de exportação
+      setAllData(prev => prev.map(item => {
+        const itemId = `${item.PHOTO_NO}-${item.referencia}`;
+        if (exportedIds.includes(itemId)) {
+          return { ...item, isExported: true, isSelected: false };
+        }
+        return item;
+      }));
+
+      setFilteredData(prev => prev.map(item => {
+        const itemId = `${item.PHOTO_NO}-${item.referencia}`;
+        if (exportedIds.includes(itemId)) {
+          return { ...item, isExported: true, isSelected: false };
+        }
+        return item;
+      }));
+
+      showSuccess('Exportação Concluída', `${selectedData.length} produtos exportados com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao exportar produtos:', error);
+      showError('Erro na Exportação', 'Erro ao exportar produtos. Verifique o console para mais detalhes.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -345,6 +515,15 @@ const Dashboard: React.FC = () => {
                   <Edit3 className="w-4 h-4" />
                   Editar
                 </button>
+
+                <button
+                  onClick={handleExportSelectedProducts}
+                  className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
+                  disabled={isExporting || selectedProducts.size === 0}
+                >
+                  <Download className="w-4 h-4" />
+                  {isExporting ? 'Exportando...' : `Exportar (${selectedProducts.size})`}
+                </button>
               </div>
               
               <NotificationBell
@@ -381,6 +560,15 @@ const Dashboard: React.FC = () => {
               >
                 <Edit3 className="w-3 h-3" />
                 <span className="hidden xs:inline">Editar</span>
+              </button>
+
+              <button
+                onClick={handleExportSelectedProducts}
+                className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
+                disabled={isExporting || selectedProducts.size === 0}
+              >
+                <Download className="w-3 h-3" />
+                <span className="hidden xs:inline">{isExporting ? 'Exportando...' : `Exportar (${selectedProducts.size})`}</span>
               </button>
               
               <NotificationBell
@@ -422,6 +610,71 @@ const Dashboard: React.FC = () => {
       {/* Tabela de Cotações - Fora do container principal para centralização perfeita */}
       <div className="mb-2">
         <div className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Controles de Seleção */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <CheckSquare className="w-4 h-4" />
+                  Seleção de Produtos
+                </h3>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span>{selectedProducts.size} selecionados</span>
+                  <span className="text-gray-400">•</span>
+                  <span>{exportedProducts.size} exportados</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={selectAllProducts}
+                  className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
+                  disabled={filteredData.length === 0}
+                >
+                  Selecionar Todos
+                </button>
+                <button
+                  onClick={() => setShowOnlyExported(!showOnlyExported)}
+                  className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                    showOnlyExported 
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                  }`}
+                  disabled={exportedProducts.size === 0}
+                >
+                  {showOnlyExported ? 'Mostrar Todos' : 'Apenas Exportados'}
+                </button>
+                <button
+                  onClick={deselectAllProducts}
+                  className="px-3 py-1.5 text-xs bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+                  disabled={selectedProducts.size === 0}
+                >
+                  Desmarcar Todos
+                </button>
+                <button
+                  onClick={async () => {
+                    showWarning('Confirmar Limpeza', 'Tem certeza que deseja limpar todos os estados de seleção e exportação?', { autoClose: false });
+                    // Aqui você pode implementar uma confirmação customizada se necessário
+                    // Por enquanto, vamos manter a funcionalidade direta
+                    setSelectedProducts(new Set());
+                    setExportedProducts(new Set());
+                    if (currentUser?.id) {
+                      try {
+                        await productSelectionService.clearSelectionState(currentUser.id);
+                        showSuccess('Estados Limpos', 'Estados limpos com sucesso!');
+                      } catch (error) {
+                        console.error('Erro ao limpar estados:', error);
+                      }
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors"
+                  disabled={selectedProducts.size === 0 && exportedProducts.size === 0}
+                >
+                  Limpar Tudo
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <Package className="w-6 h-6 text-primary-600" />
@@ -456,6 +709,9 @@ const Dashboard: React.FC = () => {
               lightbox={lightbox}
               sortOptions={sortOptions}
               onSort={handleSort}
+              selectedProducts={selectedProducts}
+              exportedProducts={exportedProducts}
+              onToggleProductSelection={toggleProductSelection}
             />
       </div>
 

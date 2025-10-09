@@ -65,6 +65,22 @@ export const useComments = () => {
       
       // Criar notificação se informações do produto foram fornecidas
       if (productInfo) {
+        // Determinar a mensagem da notificação
+        let notificationMessage = message;
+        
+        // Se não há mensagem de texto mas há imagens, usar "Foto"
+        if (!message.trim() && imageUrls.length > 0) {
+          notificationMessage = 'Foto';
+        }
+        // Se há mensagem e imagens, manter a mensagem original
+        else if (message.trim() && imageUrls.length > 0) {
+          notificationMessage = message;
+        }
+        // Se só há mensagem, manter a mensagem original
+        else if (message.trim()) {
+          notificationMessage = message;
+        }
+        
         await addDoc(collection(db, 'notifications'), {
           type: 'comment',
           productId,
@@ -72,7 +88,7 @@ export const useComments = () => {
           commentInfo: {
             userId: user.id,
             userName: user.name,
-            message,
+            message: notificationMessage,
             timestamp: new Date()
           },
           isRead: false,

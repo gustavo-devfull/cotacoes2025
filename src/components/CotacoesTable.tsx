@@ -2,6 +2,7 @@ import React from 'react';
 import { CotacaoItem, Comment, User, SortOptions } from '../types';
 import { Eye, Loader2, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import CommentsComponent from './CommentsComponent';
+import ProductToggle from './ProductToggle';
 import { ftpImageService } from '../services/ftpImageService';
 import { formatDateToBrazilian } from '../utils/dateUtils';
 import SortableHeader from './SortableHeader';
@@ -237,6 +238,10 @@ interface CotacoesTableProps {
   };
   sortOptions: SortOptions;
   onSort: (field: keyof CotacaoItem) => void;
+  // Props para seleção e exportação
+  selectedProducts: Set<string>;
+  exportedProducts: Set<string>;
+  onToggleProductSelection: (productId: string) => void;
 }
 
 const CotacoesTable: React.FC<CotacoesTableProps> = ({ 
@@ -249,7 +254,10 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
   onAddComment,
   lightbox,
   sortOptions,
-  onSort
+  onSort,
+  selectedProducts,
+  exportedProducts,
+  onToggleProductSelection
 }) => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -273,11 +281,11 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
 
   const scrollToPhoto = () => {
     if (scrollContainerRef.current) {
-      // Calcular a posição aproximada da coluna PHOTO
-      // SHOP NO (190px) + NUM COTAÇÃO (190px) + REF (190px) + DESCRIPTION (190px) + OBS (400px) + MOQ (100px) = 1260px
-      const photoColumnPosition = 1260;
+      // Calcular a posição aproximada da coluna MOQ
+      // SEL (60px) + SHOP NO (190px) + PHOTO (100px) + REF (150px) + SEGMENTO (150px) + DESCRIPTION (190px) + OBS (400px) = 1240px
+      const moqColumnPosition = 1240;
       scrollContainerRef.current.scrollTo({
-        left: photoColumnPosition,
+        left: moqColumnPosition,
         behavior: 'smooth'
       });
     }
@@ -317,10 +325,10 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
           <button
             onClick={scrollToPhoto}
             className="btn-scroll flex items-center gap-2 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100"
-            title="Rolar para a coluna PHOTO"
+            title="Rolar para a coluna MOQ"
           >
             <Camera className="w-4 h-4" />
-            PHOTO
+            MOQ
           </button>
           <button
             onClick={scrollToEnd}
@@ -340,14 +348,20 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
         <table className="w-full table-fixed">
           <thead className="table-header sticky top-0 z-20 bg-white shadow-sm">
             <tr>
+              <th className="table-cell text-center w-[60px] border-r border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-center">
+                  <span className="text-xs text-gray-600">SEL</span>
+                </div>
+              </th>
               <SortableHeader field="SHOP_NO" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
                 SHOP NO
               </SortableHeader>
-              <SortableHeader field="NUM_COTACAO" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
-                NUM COTAÇÃO
-              </SortableHeader>
+              <th className="table-cell text-center w-[100px] border-r border-gray-200">PHOTO</th>
               <SortableHeader field="referencia" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
                 REF
+              </SortableHeader>
+              <SortableHeader field="segmento" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
+                SEGMENTO
               </SortableHeader>
               <SortableHeader field="description" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
                 DESCRIPTION
@@ -358,7 +372,6 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               <SortableHeader field="MOQ" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
                 MOQ
               </SortableHeader>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200">PHOTO</th>
               <SortableHeader field="ctns" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
                 CTNS
               </SortableHeader>
@@ -420,9 +433,28 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
             </tr>
           </thead>
           <tbody>
-            {data.map((item, index) => (
-              <tr key={`${item.PHOTO_NO}-${index}`} className="hover:bg-gray-50 transition-colors duration-150">
-                <td className="table-cell font-medium text-primary-800 border-r border-gray-200 w-[190px]">
+            {data.map((item, index) => {
+              const productId = `${item.PHOTO_NO}-${item.referencia}`;
+              const isSelected = selectedProducts.has(productId);
+              const isExported = exportedProducts.has(productId);
+              
+              return (
+                <tr 
+                  key={`${item.PHOTO_NO}-${index}`} 
+                  className={`hover:bg-gray-50 transition-colors duration-150 ${
+                    isExported ? 'bg-green-50 border-l-4 border-l-green-400' : ''
+                  }`}
+                >
+                  <td className="table-cell text-center border-r border-gray-200 w-[60px]">
+                    <div className="flex items-center justify-center">
+                      <ProductToggle
+                        isSelected={isSelected}
+                        isExported={isExported}
+                        onToggle={() => onToggleProductSelection(productId)}
+                      />
+                    </div>
+                  </td>
+                  <td className="table-cell font-medium text-primary-800 border-r border-gray-200 w-[190px]">
                   {onUpdateItem ? (
                     <EditableCell 
                       value={item.SHOP_NO} 
@@ -435,18 +467,15 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                     item.SHOP_NO
                   )}
                 </td>
-                <td className="table-cell font-medium text-purple-600 border-r border-gray-200 w-[190px]">
-                  {onUpdateItem ? (
-                    <EditableCell 
-                      value={formatDateToBrazilian(item.NUM_COTACAO)} 
-                      field="NUM_COTACAO" 
-                      item={item} 
-                      onUpdate={onUpdateItem}
-                      type="text"
-                    />
-                  ) : (
-                    formatDateToBrazilian(item.NUM_COTACAO)
-                  )}
+                {/* PHOTO */}
+                <td className="table-cell text-center border-r border-gray-200 w-[100px]">
+                  <ProductImage 
+                    productRef={item.referencia} 
+                    description={item.description}
+                    onImageClick={(imageUrl, title) => {
+                      lightbox.openLightbox([imageUrl], 0, title);
+                    }}
+                  />
                 </td>
                 <td className="table-cell font-medium text-blue-600 border-r border-gray-200 w-[150px]">
                   {onUpdateItem ? (
@@ -459,6 +488,19 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                     />
                   ) : (
                     item.referencia
+                  )}
+                </td>
+                <td className="table-cell border-r border-gray-200 w-[150px]">
+                  {onUpdateItem ? (
+                    <EditableCell 
+                      value={item.segmento} 
+                      field="segmento" 
+                      item={item} 
+                      onUpdate={onUpdateItem}
+                      type="text"
+                    />
+                  ) : (
+                    item.segmento
                   )}
                 </td>
                 <td className="table-cell border-r border-gray-200 w-[190px]">
@@ -507,17 +549,6 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                   ) : (
                     formatNumber(item.MOQ)
                   )}
-                </td>
-                
-                {/* PHOTO */}
-                <td className="table-cell text-center border-r border-gray-200 w-[100px]">
-                  <ProductImage 
-                    productRef={item.referencia} 
-                    description={item.description}
-                    onImageClick={(imageUrl, title) => {
-                      lightbox.openLightbox([imageUrl], 0, title);
-                    }}
-                  />
                 </td>
                 
                 <td className="table-cell text-center border-r border-gray-200 w-[100px]">
@@ -724,7 +755,8 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                   )}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
