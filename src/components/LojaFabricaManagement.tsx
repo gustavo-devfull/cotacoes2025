@@ -122,6 +122,8 @@ const LojaFabricaManagement: React.FC = () => {
   const [cotacoesDocuments, setCotacoesDocuments] = useState<CotacaoDocument[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentoFilter, setSegmentoFilter] = useState('');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -183,7 +185,9 @@ const LojaFabricaManagement: React.FC = () => {
 
   const filteredLojas = LojaFabricaService.filterLojas(lojas, {
     searchTerm,
-    segmento: segmentoFilter || undefined
+    segmento: segmentoFilter || undefined,
+    dataInicio: dataInicio || undefined,
+    dataFim: dataFim || undefined
   });
 
   // Obter segmentos únicos para o filtro
@@ -313,27 +317,68 @@ const LojaFabricaManagement: React.FC = () => {
       </div>
 
       {/* Search e Filtros */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Buscar por nome, contato ou segmento..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Buscar por nome, contato ou segmento..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <select
+            value={segmentoFilter}
+            onChange={(e) => setSegmentoFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            <option value="">Todos os segmentos</option>
+            {segmentosUnicos.map(segmento => (
+              <option key={segmento} value={segmento}>{segmento}</option>
+            ))}
+          </select>
         </div>
-        <select
-          value={segmentoFilter}
-          onChange={(e) => setSegmentoFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="">Todos os segmentos</option>
-          {segmentosUnicos.map(segmento => (
-            <option key={segmento} value={segmento}>{segmento}</option>
-          ))}
-        </select>
+        
+        {/* Filtro por Período */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Data de Início
+            </label>
+            <input
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Data de Fim
+            </label>
+            <input
+              type="date"
+              value={dataFim}
+              onChange={(e) => setDataFim(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setDataInicio('');
+                setDataFim('');
+                setSearchTerm('');
+                setSegmentoFilter('');
+              }}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Limpar Filtros
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Cards Grid */}
@@ -506,15 +551,15 @@ const LojaFabricaManagement: React.FC = () => {
         <div className="text-center py-12">
           <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm || segmentoFilter ? 'Nenhuma loja encontrada' : 'Nenhuma loja cadastrada'}
+            {searchTerm || segmentoFilter || dataInicio || dataFim ? 'Nenhuma loja encontrada' : 'Nenhuma loja cadastrada'}
           </h3>
           <p className="text-gray-600 mb-4">
-            {searchTerm || segmentoFilter
+            {searchTerm || segmentoFilter || dataInicio || dataFim
               ? 'Tente ajustar os termos de busca ou filtros' 
               : 'Importe dados de cotações para ver as lojas e fábricas automaticamente'
             }
           </p>
-          {!searchTerm && !segmentoFilter && (
+          {!searchTerm && !segmentoFilter && !dataInicio && !dataFim && (
             <button
               onClick={() => handleOpenModal()}
               className="btn-primary flex items-center gap-2 mx-auto"
