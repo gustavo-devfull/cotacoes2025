@@ -233,7 +233,12 @@ const EditableCell: React.FC<EditableCellProps> = ({
       className={`cursor-pointer hover:bg-blue-50 transition-colors duration-150 ${className}`}
       title="Duplo clique para editar"
     >
-      {type === 'number' ? formatNumber(Number(value), 2) : String(value)}
+      {type === 'number' ? (
+        // Campos MOQ, CTNS e unitCtn devem ser exibidos como inteiros
+        (field === 'MOQ' || field === 'ctns' || field === 'unitCtn') 
+          ? Math.trunc(Number(value)).toLocaleString('pt-BR')
+          : formatNumber(Number(value), 2)
+      ) : String(value)}
     </div>
   );
 };
