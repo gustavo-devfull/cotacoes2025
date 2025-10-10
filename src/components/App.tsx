@@ -5,6 +5,7 @@ import Navigation from './Navigation';
 import Dashboard from './Dashboard';
 import UserProfile from './UserProfile';
 import UserManagement from './UserManagement';
+import LojaFabricaManagement from './LojaFabricaManagement';
 import LoginForm from './LoginForm';
 import FirestoreSetup from './FirestoreSetup';
 import { AlertProvider } from './AlertModal';
@@ -23,6 +24,8 @@ const App: React.FC = () => {
         return <UserProfile />;
       case 'users':
         return <UserManagement />;
+      case 'lojas':
+        return <LojaFabricaManagement />;
       default:
         return <Dashboard />;
     }

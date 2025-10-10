@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Users, User, Menu, X } from 'lucide-react';
+import { Home, Users, User, Menu, X, Building2 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import LoginComponent from './LoginComponent';
 import RaviLogo from '../assets/RAVI-LOGO-BRANCO.svg';
@@ -15,6 +15,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, requireAuth: true },
+    { id: 'lojas', label: 'Lojas/Fábricas', icon: Building2, requireAuth: true },
     { id: 'profile', label: 'Meu Perfil', icon: User, requireAuth: true },
     ...(isAdmin ? [{ id: 'users', label: 'Gestão de Usuários', icon: Users, requireAuth: true, requireAdmin: true }] : []),
   ];

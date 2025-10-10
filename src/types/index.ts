@@ -1,3 +1,14 @@
+export interface LojaFabrica {
+  id: string;
+  nome: string;
+  nomeContato: string;
+  telefone: string;
+  segmento: string;
+  dataCotacao: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CotacaoItem {
   SHOP_NO: string;
   NUM_COTACAO: string;
