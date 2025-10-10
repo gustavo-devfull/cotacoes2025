@@ -157,6 +157,12 @@ export class LojaFabricaService {
       );
       
       console.log(`🔄 Atualizando ${produtosAssociados.length} produtos associados à loja ${lojaId}`);
+      console.log('📊 Mudanças a serem aplicadas:', novosDados);
+      
+      if (produtosAssociados.length === 0) {
+        console.warn('⚠️ Nenhum produto encontrado para a loja:', lojaId);
+        return;
+      }
       
       // Atualizar cada produto
       const promises = produtosAssociados.map(async (produto) => {
@@ -165,27 +171,32 @@ export class LojaFabricaService {
         // Atualizar SHOP_NO se o nome da loja mudou
         if (novosDados.nome && produto.SHOP_NO !== novosDados.nome) {
           updates.SHOP_NO = novosDados.nome;
+          console.log(`📝 Produto ${produto.referencia}: SHOP_NO ${produto.SHOP_NO} → ${novosDados.nome}`);
         }
         
         // Atualizar segmento se mudou
         if (novosDados.segmento && produto.segmento !== novosDados.segmento) {
           updates.segmento = novosDados.segmento;
+          console.log(`📝 Produto ${produto.referencia}: segmento ${produto.segmento} → ${novosDados.segmento}`);
         }
         
         // Só atualizar se houver mudanças
         if (Object.keys(updates).length > 0) {
           // Assumindo que o produto tem um ID (se estiver vindo do Firebase)
           if ('id' in produto && produto.id) {
+            console.log(`💾 Salvando produto ${produto.id} com updates:`, updates);
             await updateCotacao(produto.id, updates);
-            console.log(`✅ Produto ${produto.id} atualizado`);
+            console.log(`✅ Produto ${produto.id} atualizado com sucesso`);
           } else {
             console.warn(`⚠️ Produto sem ID não pode ser atualizado:`, produto);
           }
+        } else {
+          console.log(`ℹ️ Produto ${produto.referencia} não precisa de atualização`);
         }
       });
       
       await Promise.all(promises);
-      console.log(`✅ Todos os produtos associados à loja ${lojaId} foram atualizados`);
+      console.log(`✅ Todos os produtos associados à loja ${lojaId} foram processados`);
       
     } catch (error) {
       console.error('❌ Erro ao atualizar produtos associados:', error);

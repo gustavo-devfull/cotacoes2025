@@ -123,6 +123,18 @@ const LojaFabricaManagement: React.FC = () => {
         if (mudancas.nome || mudancas.segmento) {
           console.log('🔄 Atualizando produtos associados devido a mudanças na loja');
           await LojaFabricaService.updateProdutosAssociados(editingLoja.id, cotacoes, mudancas);
+          
+          // Recarregar dados do Firebase após atualização
+          console.log('🔄 Recarregando dados após atualização dos produtos');
+          const cotacoesAtualizadas = await getCotacoes();
+          const cotacaoItemsAtualizados = cotacoesAtualizadas.map(convertToCotacaoItem);
+          setCotacoes(cotacaoItemsAtualizados);
+          
+          // Re-extrair lojas com dados atualizados
+          const lojasAtualizadas = LojaFabricaService.extractLojasFromCotacoes(cotacaoItemsAtualizados);
+          setLojas(lojasAtualizadas);
+          
+          console.log('✅ Dados recarregados após atualização');
         }
         
         // Editar loja existente
