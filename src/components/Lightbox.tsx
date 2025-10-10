@@ -72,7 +72,7 @@ const Lightbox: React.FC<LightboxProps> = ({
         {/* Botão fechar */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-all duration-200"
+          className="absolute top-8 right-8 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-all duration-200"
         >
           <X className="w-6 h-6" />
         </button>
@@ -100,7 +100,7 @@ const Lightbox: React.FC<LightboxProps> = ({
         {/* Botão download */}
         <button
           onClick={handleDownload}
-          className="absolute top-2 left-2 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-all duration-200"
+          className="absolute top-8 left-8 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-all duration-200"
           title="Baixar imagem"
         >
           <Download className="w-5 h-5" />
@@ -129,7 +129,7 @@ const Lightbox: React.FC<LightboxProps> = ({
 
         {/* Título */}
         {title && (
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg text-sm max-w-md text-center">
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-8 py-2 rounded-lg text-base max-w-md text-center uppercase">
             {title}
           </div>
         )}
