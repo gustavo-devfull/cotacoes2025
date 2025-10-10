@@ -218,15 +218,7 @@ const LojaFabricaManagement: React.FC = () => {
               <div className="space-y-3 mb-4">
                 <div className="flex items-center gap-3 text-sm">
                   <Phone className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">{loja.nomeContato}</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">{loja.telefone}</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Tag className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">{loja.segmento}</span>
+                  <span className="text-gray-600">{loja.nomeContato} - {loja.telefone}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="w-4 h-4 text-gray-400" />
@@ -272,13 +264,6 @@ const LojaFabricaManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card Footer */}
-              <div className="pt-4 border-t border-gray-200">
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Criado em {loja.createdAt ? new Date(loja.createdAt).toLocaleDateString('pt-BR') : 'N/A'}</span>
-                  <span>Atualizado em {loja.updatedAt ? new Date(loja.updatedAt).toLocaleDateString('pt-BR') : 'N/A'}</span>
-                </div>
-              </div>
             </div>
           );
         })}
