@@ -579,7 +579,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       type="number"
                     />
                   ) : (
-                    formatNumber(item.MOQ)
+                    formatNumber(Math.round(item.MOQ), 0)
                   )}
                 </td>
                 
@@ -593,7 +593,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       type="number"
                     />
                   ) : (
-                    formatNumber(item.ctns)
+                    formatNumber(Math.round(item.ctns), 0)
                   )}
                 </td>
                 <td className="table-cell text-center border-r border-gray-200 w-[100px]">
@@ -606,7 +606,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       type="number"
                     />
                   ) : (
-                    formatNumber(item.unitCtn)
+                    formatNumber(Math.round(item.unitCtn), 0)
                   )}
                 </td>
                 <td className="table-cell text-center font-medium text-blue-600 border-r border-gray-200 w-[100px]">
