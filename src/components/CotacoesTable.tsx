@@ -1,6 +1,6 @@
 import React from 'react';
 import { CotacaoItem, Comment, User, SortOptions } from '../types';
-import { Eye, Loader2, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
+import { Eye, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import CommentsComponent from './CommentsComponent';
 import ProductToggle from './ProductToggle';
 import { ftpImageService } from '../services/ftpImageService';
@@ -266,16 +266,17 @@ interface CotacoesTableProps {
   // Lista de usuários disponíveis para marcar
   availableUsers?: { id: string; name: string; email: string }[];
   usersLoading?: boolean; // Indicador de carregamento dos usuários
+  lastSelectedProductId?: string | null; // ID do último produto selecionado para scroll automático
 }
 
 const CotacoesTable: React.FC<CotacoesTableProps> = ({ 
   data, 
   onUpdateItem, 
   onDeleteItem, 
-  isLoading = false, 
-  comments, 
-  currentUser, 
-  onAddComment, 
+  isLoading = false,
+  comments,
+  currentUser,
+  onAddComment,
   lightbox, 
   sortOptions, 
   onSort,
@@ -283,9 +284,50 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
   exportedProducts,
   onToggleProductSelection,
   availableUsers = [],
-  usersLoading = false
+  usersLoading = false,
+  lastSelectedProductId
 }) => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Scroll automático para o produto selecionado
+  React.useEffect(() => {
+    if (lastSelectedProductId && scrollContainerRef.current) {
+      console.log('🔄 Iniciando scroll para produto:', lastSelectedProductId);
+      
+      // Aguardar um pouco para garantir que o DOM foi atualizado
+      const timer = setTimeout(() => {
+        const productElement = document.querySelector(`[data-product-id="${lastSelectedProductId}"]`);
+        console.log('🔍 Elemento encontrado:', productElement);
+        
+        if (productElement) {
+          // Primeiro, fazer scroll horizontal para o início da tabela
+          if (scrollContainerRef.current) {
+            console.log('📏 Fazendo scroll horizontal para início');
+            scrollContainerRef.current.scrollTo({
+              left: 0,
+              behavior: 'smooth'
+            });
+          }
+          
+          // Depois, fazer scroll vertical para o produto
+          setTimeout(() => {
+            console.log('📏 Fazendo scroll vertical para produto');
+            productElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center',
+              inline: 'nearest'
+            });
+            console.log('✅ Scroll automático concluído para produto:', lastSelectedProductId);
+          }, 200);
+        } else {
+          console.warn('⚠️ Produto não encontrado para scroll:', lastSelectedProductId);
+          console.log('🔍 Elementos disponíveis:', document.querySelectorAll('[data-product-id]'));
+        }
+      }, 150);
+
+      return () => clearTimeout(timer);
+    }
+  }, [lastSelectedProductId]);
 
   const scrollToStart = () => {
     if (scrollContainerRef.current) {
@@ -353,10 +395,10 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
           <button
             onClick={scrollToPhoto}
             className="btn-scroll flex items-center gap-2 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100"
-            title="Rolar para a coluna MOQ"
+            title="Rolar para as colunas Valores"
           >
-            <Camera className="w-4 h-4" />
-            MOQ
+            
+            Preço
           </button>
           <button
             onClick={scrollToEnd}
@@ -374,25 +416,25 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
       
       <div ref={scrollContainerRef} className="overflow-x-auto max-h-[600px] overflow-y-auto">
         <table className="w-full table-fixed">
-          <thead className="table-header sticky top-0 z-40 bg-white shadow-sm">
+          <thead className="table-header sticky top-0 z-40 bg-grey-300 shadow-sm">
             <tr>
-              <th className="table-cell text-center w-[60px] border-r border-gray-200 bg-gray-50 sticky left-0 z-50">
+              <th className="table-cell text-center w-[60px] border-r border-gray-200 bg-gray-500 sticky left-0 z-50">
                 <div className="flex items-center justify-center">
                   <span className="text-xs text-gray-600">SEL</span>
                 </div>
               </th>
               <SortableHeader field="SHOP_NO" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
-                SHOP NO
+                Loja/Fábrica
               </SortableHeader>
-              <th className="table-cell text-center w-[100px] border-r border-gray-200 sticky left-[60px] z-50 bg-white">PHOTO</th>
-              <SortableHeader field="referencia" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px] sticky left-[160px] z-50 bg-white border-r border-gray-200">
+              <th className="table-cell text-center w-[100px] border-r border-gray-200 sticky left-[60px] z-50 bg-grey-300">Foto</th>
+              <SortableHeader field="referencia" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px] sticky left-[160px] z-50 bg-grey-300 border-r border-gray-200">
                 REF
               </SortableHeader>
               <SortableHeader field="segmento" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
                 SEGMENTO
               </SortableHeader>
               <SortableHeader field="description" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
-                DESCRIPTION
+                Descrição
               </SortableHeader>
               <SortableHeader field="obs" sortOptions={sortOptions} onSort={onSort} className="text-left w-[400px]">
                 OBS
@@ -410,22 +452,22 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                 QTY
               </SortableHeader>
               <SortableHeader field="unitPriceRmb" sortOptions={sortOptions} onSort={onSort} className="text-right w-[150px]">
-                U.PRICE RMB
+                Preço ¥
               </SortableHeader>
               <SortableHeader field="unit" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
                 UNIT
               </SortableHeader>
               <SortableHeader field="amount" sortOptions={sortOptions} onSort={onSort} className="text-right w-[150px]">
-                AMOUNT
+              ¥ Total
               </SortableHeader>
               <SortableHeader field="l" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
-                L (cm)
+                L(cm)
               </SortableHeader>
               <SortableHeader field="w" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
-                W (cm)
+                W(cm)
               </SortableHeader>
               <SortableHeader field="h" sortOptions={sortOptions} onSort={onSort} className="text-center w-[100px]">
-                H (cm)
+                H(cm)
               </SortableHeader>
               <SortableHeader field="cbm" sortOptions={sortOptions} onSort={onSort} className="text-right w-[100px]">
                 CBM
@@ -445,17 +487,17 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               <SortableHeader field="tnw" sortOptions={sortOptions} onSort={onSort} className="text-right w-[100px]">
                 T.N.W
               </SortableHeader>
-              <SortableHeader field="pesoUnitario" sortOptions={sortOptions} onSort={onSort} className="text-center w-[150px]">
+              <SortableHeader field="pesoUnitario" sortOptions={sortOptions} onSort={onSort} className="text-center w-[180px]">
                 PESO UNIT (kg)
               </SortableHeader>
               <SortableHeader field="OBSERVATIONS_EXTRA" sortOptions={sortOptions} onSort={onSort} className="text-left w-[210px]">
-                OBSERVATIONS EXTRA
+                Comentários
               </SortableHeader>
               <SortableHeader field="nomeContato" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
-                NOME CONTATO
+                CONTATO
               </SortableHeader>
               <SortableHeader field="telefoneContato" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
-                TELEFONE CONTATO
+                TELEFONE 
               </SortableHeader>
               <th className="table-cell text-center w-[80px]">AÇÕES</th>
             </tr>
@@ -470,9 +512,11 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               return (
                 <tr 
                   key={`${item.PHOTO_NO}-${item.referencia}-${index}`} 
+                  data-product-id={productId}
                   className={`hover:bg-gray-50 transition-colors duration-150 ${
                     isDuplicate ? 'bg-red-50 border-l-4 border-l-red-400' :
-                    isExported ? 'bg-green-50 border-l-4 border-l-green-400' : ''
+                    isExported ? 'bg-green-50 border-l-4 border-l-green-400' : 
+                    isSelected ? 'bg-blue-50 border-l-4 border-l-blue-400' : ''
                   }`}
                 >
                   <td className="table-cell text-center border-r border-gray-200 w-[60px] sticky left-0 z-20 bg-white">
