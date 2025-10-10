@@ -442,7 +442,7 @@ const LojaFabricaManagement: React.FC = () => {
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
                     <Package className="w-3 h-3" />
-                    Itens
+                    Produtos Exportados
                   </div>
                   <div className="text-lg font-semibold text-gray-900">{stats.totalItens}</div>
                 </div>
