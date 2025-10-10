@@ -579,7 +579,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       type="number"
                     />
                   ) : (
-                    formatNumber(Math.floor(item.MOQ), 0)
+                    Math.trunc(item.MOQ).toLocaleString('pt-BR')
                   )}
                 </td>
                 
@@ -593,7 +593,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       type="number"
                     />
                   ) : (
-                    formatNumber(Math.floor(item.ctns), 0)
+                    Math.trunc(item.ctns).toLocaleString('pt-BR')
                   )}
                 </td>
                 <td className="table-cell text-center border-r border-gray-200 w-[100px]">
@@ -606,7 +606,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                       type="number"
                     />
                   ) : (
-                    formatNumber(Math.floor(item.unitCtn), 0)
+                    Math.trunc(item.unitCtn).toLocaleString('pt-BR')
                   )}
                 </td>
                 <td className="table-cell text-center font-medium text-blue-600 border-r border-gray-200 w-[100px]">
