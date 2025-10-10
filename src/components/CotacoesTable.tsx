@@ -266,7 +266,6 @@ interface CotacoesTableProps {
   // Lista de usuários disponíveis para marcar
   availableUsers?: { id: string; name: string; email: string }[];
   usersLoading?: boolean; // Indicador de carregamento dos usuários
-  lastSelectedProductId?: string | null; // ID do último produto selecionado para scroll automático
 }
 
 const CotacoesTable: React.FC<CotacoesTableProps> = ({ 
@@ -284,50 +283,9 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
   exportedProducts,
   onToggleProductSelection,
   availableUsers = [],
-  usersLoading = false,
-  lastSelectedProductId
+  usersLoading = false
 }) => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
-
-  // Scroll automático para o produto selecionado
-  React.useEffect(() => {
-    if (lastSelectedProductId && scrollContainerRef.current) {
-      console.log('🔄 Iniciando scroll para produto:', lastSelectedProductId);
-      
-      // Aguardar um pouco para garantir que o DOM foi atualizado
-      const timer = setTimeout(() => {
-        const productElement = document.querySelector(`[data-product-id="${lastSelectedProductId}"]`);
-        console.log('🔍 Elemento encontrado:', productElement);
-        
-        if (productElement) {
-          // Primeiro, fazer scroll horizontal para o início da tabela
-          if (scrollContainerRef.current) {
-            console.log('📏 Fazendo scroll horizontal para início');
-            scrollContainerRef.current.scrollTo({
-              left: 0,
-              behavior: 'smooth'
-            });
-          }
-          
-          // Depois, fazer scroll vertical para o produto
-          setTimeout(() => {
-            console.log('📏 Fazendo scroll vertical para produto');
-            productElement.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'center',
-              inline: 'nearest'
-            });
-            console.log('✅ Scroll automático concluído para produto:', lastSelectedProductId);
-          }, 200);
-        } else {
-          console.warn('⚠️ Produto não encontrado para scroll:', lastSelectedProductId);
-          console.log('🔍 Elementos disponíveis:', document.querySelectorAll('[data-product-id]'));
-        }
-      }, 150);
-
-      return () => clearTimeout(timer);
-    }
-  }, [lastSelectedProductId]);
 
   const scrollToStart = () => {
     if (scrollContainerRef.current) {

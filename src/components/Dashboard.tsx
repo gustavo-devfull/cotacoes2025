@@ -49,9 +49,6 @@ const Dashboard: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [showOnlyExported, setShowOnlyExported] = useState(false);
   
-  // Estado para rastrear o último produto selecionado para scroll automático
-  const [lastSelectedProductId, setLastSelectedProductId] = useState<string | null>(null);
-  
   // Hooks para comentários, notificações e usuário
   const { comments, addComment, firebaseError } = useComments();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
@@ -637,13 +634,6 @@ const Dashboard: React.FC = () => {
       newSelectedProducts.delete(productId);
     } else {
       newSelectedProducts.add(productId);
-      // Rastrear o último produto selecionado para scroll automático
-      setLastSelectedProductId(productId);
-      
-      // Limpar o ID após um tempo para evitar scrolls repetidos
-      setTimeout(() => {
-        setLastSelectedProductId(null);
-      }, 1000);
     }
     
     setSelectedProducts(newSelectedProducts);
@@ -1058,7 +1048,6 @@ const Dashboard: React.FC = () => {
                 email: user.email
               }))}
               usersLoading={usersLoading}
-              lastSelectedProductId={lastSelectedProductId}
             />
         </div>
       </div>
