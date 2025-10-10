@@ -11,6 +11,7 @@ const LojaFabricaManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentoFilter, setSegmentoFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLoja, setEditingLoja] = useState<LojaFabrica | null>(null);
   const [formData, setFormData] = useState({
@@ -105,29 +106,50 @@ const LojaFabricaManagement: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingLoja) {
-      // Editar loja existente
-      const updatedLoja: LojaFabrica = {
-        ...editingLoja,
-        ...formData,
-        updatedAt: new Date()
-      };
-      setLojas(lojas.map(loja => loja.id === editingLoja.id ? updatedLoja : loja));
-    } else {
-      // Criar nova loja
-      const newLoja: LojaFabrica = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      setLojas([...lojas, newLoja]);
+    try {
+      setIsSaving(true);
+      
+      if (editingLoja) {
+        // Verificar se houve mudanças no nome ou segmento
+        const mudancas = {
+          nome: formData.nome !== editingLoja.nome ? formData.nome : undefined,
+          segmento: formData.segmento !== editingLoja.segmento ? formData.segmento : undefined
+        };
+        
+        // Se houve mudanças no nome ou segmento, atualizar produtos associados
+        if (mudancas.nome || mudancas.segmento) {
+          console.log('🔄 Atualizando produtos associados devido a mudanças na loja');
+          await LojaFabricaService.updateProdutosAssociados(editingLoja.id, cotacoes, mudancas);
+        }
+        
+        // Editar loja existente
+        const updatedLoja: LojaFabrica = {
+          ...editingLoja,
+          ...formData,
+          updatedAt: new Date()
+        };
+        setLojas(lojas.map(loja => loja.id === editingLoja.id ? updatedLoja : loja));
+      } else {
+        // Criar nova loja
+        const newLoja: LojaFabrica = {
+          id: Date.now().toString(),
+          ...formData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        setLojas([...lojas, newLoja]);
+      }
+      
+      handleCloseModal();
+    } catch (error) {
+      console.error('❌ Erro ao salvar loja:', error);
+      // Aqui você pode adicionar um toast de erro se tiver
+    } finally {
+      setIsSaving(false);
     }
-    
-    handleCloseModal();
   };
 
   const handleDelete = (id: string) => {
@@ -396,8 +418,16 @@ const LojaFabricaManagement: React.FC = () => {
                   <button
                     type="submit"
                     className="flex-1 btn-primary"
+                    disabled={isSaving}
                   >
-                    {editingLoja ? 'Salvar Alterações' : 'Criar Loja/Fábrica'}
+                    {isSaving ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Salvando...
+                      </div>
+                    ) : (
+                      editingLoja ? 'Salvar Alterações' : 'Criar Loja/Fábrica'
+                    )}
                   </button>
                 </div>
               </form>

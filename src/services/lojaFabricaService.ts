@@ -1,4 +1,5 @@
 import { CotacaoItem, LojaFabrica } from '../types';
+import { updateCotacao } from './cotacaoService';
 
 // Serviço para gerenciar dados de Lojas/Fábricas extraídos das cotações
 export class LojaFabricaService {
@@ -141,5 +142,54 @@ export class LojaFabricaService {
       isValid: errors.length === 0,
       errors
     };
+  }
+  
+  // Atualizar produtos associados a uma loja quando ela for editada
+  static async updateProdutosAssociados(
+    lojaId: string, 
+    cotacoes: CotacaoItem[], 
+    novosDados: { nome?: string; segmento?: string }
+  ): Promise<void> {
+    try {
+      // Encontrar todos os produtos associados à loja
+      const produtosAssociados = cotacoes.filter(cotacao => 
+        `${cotacao.SHOP_NO}-${cotacao.nomeContato}-${cotacao.telefoneContato}` === lojaId
+      );
+      
+      console.log(`🔄 Atualizando ${produtosAssociados.length} produtos associados à loja ${lojaId}`);
+      
+      // Atualizar cada produto
+      const promises = produtosAssociados.map(async (produto) => {
+        const updates: Partial<CotacaoItem> = {};
+        
+        // Atualizar SHOP_NO se o nome da loja mudou
+        if (novosDados.nome && produto.SHOP_NO !== novosDados.nome) {
+          updates.SHOP_NO = novosDados.nome;
+        }
+        
+        // Atualizar segmento se mudou
+        if (novosDados.segmento && produto.segmento !== novosDados.segmento) {
+          updates.segmento = novosDados.segmento;
+        }
+        
+        // Só atualizar se houver mudanças
+        if (Object.keys(updates).length > 0) {
+          // Assumindo que o produto tem um ID (se estiver vindo do Firebase)
+          if ('id' in produto && produto.id) {
+            await updateCotacao(produto.id, updates);
+            console.log(`✅ Produto ${produto.id} atualizado`);
+          } else {
+            console.warn(`⚠️ Produto sem ID não pode ser atualizado:`, produto);
+          }
+        }
+      });
+      
+      await Promise.all(promises);
+      console.log(`✅ Todos os produtos associados à loja ${lojaId} foram atualizados`);
+      
+    } catch (error) {
+      console.error('❌ Erro ao atualizar produtos associados:', error);
+      throw error;
+    }
   }
 }
