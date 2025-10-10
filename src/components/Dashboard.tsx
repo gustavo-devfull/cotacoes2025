@@ -716,11 +716,22 @@ const Dashboard: React.FC = () => {
       return;
     }
 
+    // Filtrar apenas produtos marcados como exportados
+    const exportedData = allData.filter(item => {
+      const itemId = `${item.PHOTO_NO}-${item.referencia}`;
+      return exportedProducts.has(itemId);
+    });
+
+    if (exportedData.length === 0) {
+      showWarning('Nenhum Produto Exportado', 'Nenhum produto foi marcado como exportado. Selecione e exporte produtos primeiro.');
+      return;
+    }
+
     setIsExportingBaseProdutos(true);
     
     try {
-      // Usar TODOS os dados disponíveis, não apenas os selecionados
-      const baseProdutos = convertCotacoesToBaseProdutos(allData);
+      // Usar apenas produtos marcados como exportados
+      const baseProdutos = convertCotacoesToBaseProdutos(exportedData);
       
       // Remover duplicatas baseado na referência e fabrica
       const uniqueBaseProdutos = removeDuplicates(baseProdutos);
@@ -735,7 +746,7 @@ const Dashboard: React.FC = () => {
         includeHeaders: true
       });
 
-      showSuccess('Base de Produtos Exportada', `${sortedBaseProdutos.length} produtos únicos de ${allData.length} produtos totais exportados com sucesso!`);
+      showSuccess('Base de Produtos Exportada', `${sortedBaseProdutos.length} produtos únicos de ${exportedData.length} produtos exportados com sucesso!`);
     } catch (error) {
       console.error('Erro ao exportar base de produtos:', error);
       showError('Erro na Exportação', 'Erro ao exportar base de produtos. Verifique o console para mais detalhes.');
@@ -806,10 +817,10 @@ const Dashboard: React.FC = () => {
                 <button
                   onClick={handleExportBaseProdutos}
                   className="btn-primary flex items-center gap-2 px-3 py-1.5 text-sm"
-                  disabled={isExportingBaseProdutos || allData.length === 0}
+                  disabled={isExportingBaseProdutos || allData.length === 0 || exportedProducts.size === 0}
                 >
                   <FileSpreadsheet className="w-4 h-4" />
-                  {isExportingBaseProdutos ? 'Gerando Base...' : 'Base de Produtos'}
+                  {isExportingBaseProdutos ? 'Gerando Base...' : `Base de Produtos (${exportedProducts.size})`}
                 </button>
               </div>
               
