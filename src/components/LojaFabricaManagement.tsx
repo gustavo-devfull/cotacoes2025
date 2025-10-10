@@ -1,9 +1,110 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, BarChart3, Package, DollarSign, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, BarChart3, Package, DollarSign, TrendingUp, ChevronDown, ChevronUp, Eye, Loader2 } from 'lucide-react';
 import { LojaFabrica, CotacaoItem } from '../types';
 import { LojaFabricaService } from '../services/lojaFabricaService';
 import { getCotacoes, convertToCotacaoItem, CotacaoDocument } from '../services/cotacaoService';
+import { ftpImageService } from '../services/ftpImageService';
 import { mockData } from '../data/mockData';
+
+// Componente para exibir imagem do produto (150px)
+const ProductImageLarge: React.FC<{ 
+  productRef: string; 
+  description: string; 
+}> = ({ productRef, description }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Buscar imagem do FTP baseada na REF
+  useEffect(() => {
+    const loadImage = async () => {
+      if (!productRef) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setImageError(false);
+      setImageLoaded(false);
+
+      try {
+        // Construir URL diretamente para melhor performance
+        const cleanRef = productRef.trim().toUpperCase();
+        const directUrl = `https://ideolog.ia.br/images/products/${cleanRef}.jpg`;
+        
+        // Verificar cache primeiro
+        const cachedUrl = ftpImageService.getCacheStats().keys.includes(cleanRef) 
+          ? directUrl 
+          : null;
+        
+        if (cachedUrl) {
+          setImageUrl(cachedUrl);
+          setIsLoading(false);
+          return;
+        }
+
+        // Tentar obter URL do serviço
+        const url = await ftpImageService.getImageUrl(productRef);
+        if (url) {
+          setImageUrl(url);
+        } else {
+          // Se o serviço não encontrou, tentar URL direta
+          setImageUrl(directUrl);
+        }
+      } catch (error) {
+        console.error(`Erro ao carregar imagem para REF ${productRef}:`, error);
+        // Em caso de erro, tentar URL direta
+        const cleanRef = productRef.trim().toUpperCase();
+        setImageUrl(`https://ideolog.ia.br/images/products/${cleanRef}.jpg`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadImage();
+  }, [productRef]);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoaded(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-[150px] h-[150px] bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+      </div>
+    );
+  }
+
+  if (imageError || !imageUrl) {
+    return (
+      <div className="w-[150px] h-[150px] bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+        <Eye className="w-8 h-8 text-gray-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-[150px] h-[150px]">
+      <img
+        src={imageUrl}
+        alt={description}
+        className="w-[150px] h-[150px] object-cover rounded-lg border border-gray-200 transition-all duration-200"
+        onLoad={handleImageLoad}
+        onError={handleImageError}
+        loading="lazy"
+        title={`REF: ${productRef}`}
+      />
+    </div>
+  );
+};
 
 const LojaFabricaManagement: React.FC = () => {
   const [lojas, setLojas] = useState<LojaFabrica[]>([]);
@@ -331,23 +432,44 @@ const LojaFabricaManagement: React.FC = () => {
               {expandedCard === loja.id && (
                 <div className="mt-4 border-t border-gray-200 pt-4">
                   <h4 className="text-sm font-medium text-gray-900 mb-3">Produtos desta Loja/Fábrica</h4>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
                     {LojaFabricaService.getLojaProdutos(loja.id, cotacoes).map((produto, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-white rounded border flex items-center justify-center text-xs font-medium text-gray-600">
-                            {produto.PHOTO_NO || 'N/A'}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">{produto.referencia}</div>
-                            <div className="text-xs text-gray-500">{produto.description}</div>
-                          </div>
+                      <div key={index} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg">
+                        {/* Imagem do produto */}
+                        <div className="flex-shrink-0">
+                          <ProductImageLarge 
+                            productRef={produto.referencia} 
+                            description={produto.description}
+                          />
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-gray-900">
-                            ¥{produto.unitPriceRmb.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        
+                        {/* Informações do produto */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="w-8 h-8 bg-white rounded border flex items-center justify-center text-xs font-medium text-gray-600">
+                                  {produto.PHOTO_NO || 'N/A'}
+                                </div>
+                                <div className="font-semibold text-gray-900">{produto.referencia}</div>
+                              </div>
+                              <div className="text-sm text-gray-600 mb-2">{produto.description}</div>
+                              <div className="text-xs text-gray-500">
+                                QTY: {produto.qty} | MOQ: {produto.MOQ} | CTNS: {produto.ctns}
+                              </div>
+                            </div>
+                            
+                            {/* Preço */}
+                            <div className="text-right ml-4">
+                              <div className="text-lg font-bold text-gray-900">
+                                ¥{produto.unitPriceRmb.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </div>
+                              <div className="text-sm text-gray-500">RMB</div>
+                              <div className="text-xs text-gray-400">
+                                Total: ¥{(produto.unitPriceRmb * produto.qty).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-500">RMB</div>
                         </div>
                       </div>
                     ))}
