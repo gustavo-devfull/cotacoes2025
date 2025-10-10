@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, Tag } from 'lucide-react';
-import { LojaFabrica } from '../types';
+import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, Tag, BarChart3, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { LojaFabrica, CotacaoItem } from '../types';
+import { LojaFabricaService } from '../services/lojaFabricaService';
+import { getCotacoes, convertToCotacaoItem } from '../services/cotacaoService';
+import { mockData } from '../data/mockData';
 
 const LojaFabricaManagement: React.FC = () => {
   const [lojas, setLojas] = useState<LojaFabrica[]>([]);
+  const [cotacoes, setCotacoes] = useState<CotacaoItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [segmentoFilter, setSegmentoFilter] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLoja, setEditingLoja] = useState<LojaFabrica | null>(null);
   const [formData, setFormData] = useState({
@@ -15,48 +21,54 @@ const LojaFabricaManagement: React.FC = () => {
     dataCotacao: ''
   });
 
-  // Dados mock para demonstração
+  // Carregar dados reais das cotações
   useEffect(() => {
-    const mockLojas: LojaFabrica[] = [
-      {
-        id: '1',
-        nome: 'Fábrica Tech Solutions',
-        nomeContato: 'João Silva',
-        telefone: '(11) 99999-9999',
-        segmento: 'Eletrônicos',
-        dataCotacao: '2025-01-15',
-        createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-15')
-      },
-      {
-        id: '2',
-        nome: 'Loja Premium Audio',
-        nomeContato: 'Maria Santos',
-        telefone: '(11) 88888-8888',
-        segmento: 'Áudio',
-        dataCotacao: '2025-01-16',
-        createdAt: new Date('2025-01-02'),
-        updatedAt: new Date('2025-01-16')
-      },
-      {
-        id: '3',
-        nome: 'Fábrica Mobile Accessories',
-        nomeContato: 'Carlos Oliveira',
-        telefone: '(11) 77777-7777',
-        segmento: 'Acessórios',
-        dataCotacao: '2025-01-17',
-        createdAt: new Date('2025-01-03'),
-        updatedAt: new Date('2025-01-17')
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Tentar carregar dados do Firebase
+        const cotacoesFirebase = await getCotacoes();
+        const cotacaoItems = cotacoesFirebase.map(convertToCotacaoItem);
+        
+        setCotacoes(cotacaoItems);
+        
+        // Extrair lojas únicas dos dados de cotação
+        const lojasExtraidas = LojaFabricaService.extractLojasFromCotacoes(cotacaoItems);
+        setLojas(lojasExtraidas);
+        
+        console.log('✅ Dados carregados:', {
+          cotacoes: cotacaoItems.length,
+          lojas: lojasExtraidas.length
+        });
+        
+      } catch (error) {
+        console.error('❌ Erro ao carregar dados do Firebase:', error);
+        
+        // Fallback para dados mock
+        setCotacoes(mockData);
+        const lojasMock = LojaFabricaService.extractLojasFromCotacoes(mockData);
+        setLojas(lojasMock);
+        
+        console.log('📋 Usando dados mock:', {
+          cotacoes: mockData.length,
+          lojas: lojasMock.length
+        });
+      } finally {
+        setIsLoading(false);
       }
-    ];
-    setLojas(mockLojas);
+    };
+
+    loadData();
   }, []);
 
-  const filteredLojas = lojas.filter(loja =>
-    loja.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loja.nomeContato.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loja.segmento.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLojas = LojaFabricaService.filterLojas(lojas, {
+    searchTerm,
+    segmento: segmentoFilter || undefined
+  });
+
+  // Obter segmentos únicos para o filtro
+  const segmentosUnicos = LojaFabricaService.getSegmentosUnicos(cotacoes);
 
   const handleOpenModal = (loja?: LojaFabrica) => {
     if (loja) {
@@ -143,98 +155,157 @@ const LojaFabricaManagement: React.FC = () => {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Buscar por nome, contato ou segmento..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        />
+      {/* Search e Filtros */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Buscar por nome, contato ou segmento..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+        </div>
+        <select
+          value={segmentoFilter}
+          onChange={(e) => setSegmentoFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          <option value="">Todos os segmentos</option>
+          {segmentosUnicos.map(segmento => (
+            <option key={segmento} value={segmento}>{segmento}</option>
+          ))}
+        </select>
       </div>
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredLojas.map((loja) => (
-          <div key={loja.id} className="card hover:shadow-lg transition-shadow duration-200">
-            {/* Card Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-primary-600" />
+        {filteredLojas.map((loja) => {
+          const stats = LojaFabricaService.getLojaStats(loja.id, cotacoes);
+          return (
+            <div key={loja.id} className="card hover:shadow-lg transition-shadow duration-200">
+              {/* Card Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-primary-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{loja.nome}</h3>
+                    <p className="text-sm text-gray-500">{loja.segmento}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">{loja.nome}</h3>
-                  <p className="text-sm text-gray-500">{loja.segmento}</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleOpenModal(loja)}
+                    className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
+                    title="Editar"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(loja.id)}
+                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Excluir"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleOpenModal(loja)}
-                  className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
-                  title="Editar"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(loja.id)}
-                  className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                  title="Excluir"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
 
-            {/* Card Content */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-sm">
-                <Phone className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-600">{loja.nomeContato}</span>
+              {/* Card Content */}
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">{loja.nomeContato}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">{loja.telefone}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Tag className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">{loja.segmento}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">
+                    {new Date(loja.dataCotacao).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Phone className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-600">{loja.telefone}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Tag className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-600">{loja.segmento}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-600">
-                  {new Date(loja.dataCotacao).toLocaleDateString('pt-BR')}
-                </span>
-              </div>
-            </div>
 
-            {/* Card Footer */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Criado em {new Date(loja.createdAt).toLocaleDateString('pt-BR')}</span>
-                <span>Atualizado em {new Date(loja.updatedAt).toLocaleDateString('pt-BR')}</span>
+              {/* Estatísticas */}
+              <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
+                    <BarChart3 className="w-3 h-3" />
+                    Cotações
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900">{stats.totalCotacoes}</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
+                    <Package className="w-3 h-3" />
+                    Itens
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900">{stats.totalItens}</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
+                    <DollarSign className="w-3 h-3" />
+                    Valor Total
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    R$ {stats.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
+                    <TrendingUp className="w-3 h-3" />
+                    CBM Total
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {stats.cbmTotal.toFixed(3)} m³
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Footer */}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Criado em {new Date(loja.createdAt).toLocaleDateString('pt-BR')}</span>
+                  <span>Atualizado em {new Date(loja.updatedAt).toLocaleDateString('pt-BR')}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando dados das lojas e fábricas...</p>
+        </div>
+      )}
+
       {/* Empty State */}
-      {filteredLojas.length === 0 && (
+      {!isLoading && filteredLojas.length === 0 && (
         <div className="text-center py-12">
           <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm ? 'Nenhuma loja encontrada' : 'Nenhuma loja cadastrada'}
+            {searchTerm || segmentoFilter ? 'Nenhuma loja encontrada' : 'Nenhuma loja cadastrada'}
           </h3>
           <p className="text-gray-600 mb-4">
-            {searchTerm 
-              ? 'Tente ajustar os termos de busca' 
-              : 'Comece adicionando uma nova loja ou fábrica'
+            {searchTerm || segmentoFilter
+              ? 'Tente ajustar os termos de busca ou filtros' 
+              : 'Importe dados de cotações para ver as lojas e fábricas automaticamente'
             }
           </p>
-          {!searchTerm && (
+          {!searchTerm && !segmentoFilter && (
             <button
               onClick={() => handleOpenModal()}
               className="btn-primary flex items-center gap-2 mx-auto"
