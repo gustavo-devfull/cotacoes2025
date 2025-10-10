@@ -4,13 +4,15 @@ import { LojaFabrica, CotacaoItem } from '../types';
 import { LojaFabricaService } from '../services/lojaFabricaService';
 import { getCotacoes, convertToCotacaoItem, CotacaoDocument } from '../services/cotacaoService';
 import { ftpImageService } from '../services/ftpImageService';
+import { useLightbox } from '../hooks/useLightbox';
 import { mockData } from '../data/mockData';
 
 // Componente para exibir imagem do produto (150px)
 const ProductImageLarge: React.FC<{ 
   productRef: string; 
-  description: string; 
-}> = ({ productRef, description }) => {
+  description: string;
+  onImageClick?: (imageUrl: string, title: string) => void;
+}> = ({ productRef, description, onImageClick }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -65,6 +67,12 @@ const ProductImageLarge: React.FC<{
     loadImage();
   }, [productRef]);
 
+  const handleImageClick = () => {
+    if (onImageClick && imageLoaded && !imageError && imageUrl) {
+      onImageClick(imageUrl, description);
+    }
+  };
+
   const handleImageLoad = () => {
     setImageLoaded(true);
     setImageError(false);
@@ -96,11 +104,12 @@ const ProductImageLarge: React.FC<{
       <img
         src={imageUrl}
         alt={description}
-        className="w-[150px] h-[150px] object-cover rounded-lg border border-gray-200 transition-all duration-200"
+        className="w-[150px] h-[150px] object-cover rounded-lg border border-gray-200 transition-all duration-200 cursor-pointer hover:opacity-80 hover:scale-105"
         onLoad={handleImageLoad}
         onError={handleImageError}
+        onClick={handleImageClick}
         loading="lazy"
-        title={`REF: ${productRef}`}
+        title={`REF: ${productRef} - Clique para ampliar`}
       />
     </div>
   );
@@ -124,6 +133,9 @@ const LojaFabricaManagement: React.FC = () => {
     segmento: '',
     dataCotacao: ''
   });
+
+  // Hook do lightbox
+  const lightbox = useLightbox();
 
   // Carregar dados reais das cotações
   useEffect(() => {
@@ -440,6 +452,9 @@ const LojaFabricaManagement: React.FC = () => {
                           <ProductImageLarge 
                             productRef={produto.referencia} 
                             description={produto.description}
+                            onImageClick={(imageUrl, title) => {
+                              lightbox.openLightbox([imageUrl], 0, title);
+                            }}
                           />
                         </div>
                         
