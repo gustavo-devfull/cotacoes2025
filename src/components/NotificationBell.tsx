@@ -20,7 +20,9 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
   onFilterByRef
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { getUsersByIds } = useUsers();
+  // Get users context with error handling
+  const usersContext = useUsers();
+  const { getUsersByIds } = usersContext;
   const [mentionedUsersCache, setMentionedUsersCache] = useState<{[key: string]: string[]}>({});
 
   // Carregar nomes dos usuários marcados

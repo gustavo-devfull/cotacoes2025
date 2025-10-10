@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { MessageCircle, Send, Image, X } from 'lucide-react';
 import { Comment as CommentType } from '../types';
 import { uploadService } from '../services/uploadService';
@@ -29,10 +29,15 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [mentionedUsersNames, setMentionedUsersNames] = useState<{[key: string]: string[]}>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { getUsersByIds } = useUsers();
+  // Get users context with error handling
+  const usersContext = useUsers();
+  const { getUsersByIds } = usersContext;
 
   // Filtrar comentários do produto atual
-  const productComments = comments.filter(comment => comment.productId === productId);
+  const productComments = useMemo(() => 
+    comments.filter(comment => comment.productId === productId), 
+    [comments, productId]
+  );
   
   // DEBUG: Adicionar comentário de teste se não houver comentários com mentionedUsers
   const hasCommentsWithMentions = productComments.some(comment => comment.mentionedUsers && comment.mentionedUsers.length > 0);
@@ -46,48 +51,72 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
     })));
   }
 
+  // Memoizar os IDs únicos de usuários mencionados para evitar recálculos desnecessários
+  const mentionedUserIds = useMemo(() => {
+    const uniqueIds = new Set<string>();
+    productComments.forEach(comment => {
+      if (comment.mentionedUsers && comment.mentionedUsers.length > 0) {
+        comment.mentionedUsers.forEach(id => uniqueIds.add(id));
+      }
+    });
+    return Array.from(uniqueIds);
+  }, [productComments]);
+
   // Carregar nomes dos usuários marcados
   useEffect(() => {
     const loadMentionedUsersNames = async () => {
+      if (mentionedUserIds.length === 0) {
+        setMentionedUsersNames({});
+        return;
+      }
+
       console.log('🔍 Carregando nomes dos usuários marcados...');
       console.log('📊 Comentários recebidos:', comments.length);
       
       const cache: {[key: string]: string[]} = {};
       
-      for (const comment of productComments) {
-        console.log(`📝 Comentário ${comment.id}:`, {
-          message: comment.message,
-          mentionedUsers: comment.mentionedUsers,
-          hasMentionedUsers: !!(comment.mentionedUsers && comment.mentionedUsers.length > 0)
-        });
+      try {
+        // Buscar todos os usuários únicos de uma vez
+        console.log(`🔍 Buscando nomes para IDs únicos: ${mentionedUserIds.join(', ')}`);
+        const users = await getUsersByIds(mentionedUserIds);
+        const userMap = new Map(users.map(user => [user.id, user.name]));
         
-        if (comment.mentionedUsers && comment.mentionedUsers.length > 0) {
-          const cacheKey = comment.mentionedUsers.sort().join(',');
-          
-          if (!cache[cacheKey]) {
-            try {
-              console.log(`🔍 Buscando nomes para IDs: ${comment.mentionedUsers.join(', ')}`);
-              const users = await getUsersByIds(comment.mentionedUsers);
-              cache[cacheKey] = users.map(user => user.name);
-              console.log(`✅ Nomes encontrados: ${cache[cacheKey].join(', ')}`);
-            } catch (error) {
-              console.error('❌ Erro ao carregar nomes dos usuários marcados:', error);
-              cache[cacheKey] = comment.mentionedUsers; // Fallback para IDs
+        // Criar cache para cada comentário
+        for (const comment of productComments) {
+          if (comment.mentionedUsers && comment.mentionedUsers.length > 0) {
+            const cacheKey = comment.mentionedUsers.sort().join(',');
+            
+            if (!cache[cacheKey]) {
+              const names = comment.mentionedUsers
+                .map(id => userMap.get(id) || id) // Fallback para ID se nome não encontrado
+                .filter(Boolean);
+              
+              cache[cacheKey] = names;
+              console.log(`✅ Nomes encontrados para ${comment.id}: ${names.join(', ')}`);
             }
           }
         }
+        
+        console.log('📊 Cache final de nomes:', cache);
+        setMentionedUsersNames(cache);
+      } catch (error) {
+        console.error('❌ Erro ao carregar nomes dos usuários marcados:', error);
+        // Em caso de erro, usar IDs como fallback
+        const fallbackCache: {[key: string]: string[]} = {};
+        productComments.forEach(comment => {
+          if (comment.mentionedUsers && comment.mentionedUsers.length > 0) {
+            const cacheKey = comment.mentionedUsers.sort().join(',');
+            fallbackCache[cacheKey] = comment.mentionedUsers;
+          }
+        });
+        setMentionedUsersNames(fallbackCache);
       }
-      
-      console.log('📊 Cache final de nomes:', cache);
-      setMentionedUsersNames(cache);
     };
 
-    if (productComments.length > 0) {
-      loadMentionedUsersNames();
-    }
-  }, [productComments, getUsersByIds]);
+    loadMentionedUsersNames();
+  }, [mentionedUserIds, getUsersByIds]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (newMessage.trim() || selectedFiles.length > 0) {
       setIsUploading(true);
       
@@ -139,7 +168,7 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
         setIsUploading(false);
       }
     }
-  };
+  }, [newMessage, selectedFiles, selectedUsers, productId, onAddComment]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;

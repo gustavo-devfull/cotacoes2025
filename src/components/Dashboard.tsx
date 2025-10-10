@@ -53,7 +53,9 @@ const Dashboard: React.FC = () => {
   const { comments, addComment, firebaseError } = useComments();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { currentUser } = useUser();
-  const { users: availableUsers, loading: usersLoading } = useUsers();
+  // Get users context with error handling
+  const usersContext = useUsers();
+  const { users: availableUsers, loading: usersLoading } = usersContext;
   const lightbox = useLightbox();
   const { showSuccess, showError, showWarning, showInfo } = useAlertModal();
 

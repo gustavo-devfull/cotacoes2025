@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { userService, User } from '../services/userService';
 
 interface UsersContextType {
@@ -62,7 +62,7 @@ export const UsersProvider: React.FC<UsersProviderProps> = ({ children }) => {
     loadUsers();
   }, []);
 
-  const refreshUsers = async () => {
+  const refreshUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -83,9 +83,9 @@ export const UsersProvider: React.FC<UsersProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const searchUsers = async (searchTerm: string): Promise<User[]> => {
+  const searchUsers = useCallback(async (searchTerm: string): Promise<User[]> => {
     try {
       console.log('🔍 Buscando usuários com termo (Context):', searchTerm);
       
@@ -105,9 +105,9 @@ export const UsersProvider: React.FC<UsersProviderProps> = ({ children }) => {
       console.error('❌ Erro ao buscar usuários (Context):', err);
       return [];
     }
-  };
+  }, []);
 
-  const getUsersByIds = async (userIds: string[]): Promise<User[]> => {
+  const getUsersByIds = useCallback(async (userIds: string[]): Promise<User[]> => {
     try {
       console.log('🔍 Buscando usuários por IDs (Context):', userIds);
       
@@ -125,7 +125,7 @@ export const UsersProvider: React.FC<UsersProviderProps> = ({ children }) => {
       console.error('❌ Erro ao buscar usuários por IDs (Context):', err);
       return [];
     }
-  };
+  }, []);
 
   const value: UsersContextType = {
     users,
