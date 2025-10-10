@@ -435,7 +435,7 @@ const LojaFabricaManagement: React.FC = () => {
                   <div className="space-y-4 max-h-96 overflow-y-auto">
                     {LojaFabricaService.getLojaProdutos(loja.id, cotacoes).map((produto, index) => (
                       <div key={index} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg">
-                        {/* Imagem do produto */}
+                        {/* Imagem do produto - lado esquerdo */}
                         <div className="flex-shrink-0">
                           <ProductImageLarge 
                             productRef={produto.referencia} 
@@ -443,30 +443,26 @@ const LojaFabricaManagement: React.FC = () => {
                           />
                         </div>
                         
-                        {/* Informações do produto */}
+                        {/* Informações do produto - lado direito */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <div className="w-8 h-8 bg-white rounded border flex items-center justify-center text-xs font-medium text-gray-600">
-                                  {produto.PHOTO_NO || 'N/A'}
-                                </div>
-                                <div className="font-semibold text-gray-900">{produto.referencia}</div>
-                              </div>
-                              <div className="text-sm text-gray-600 mb-2">{produto.description}</div>
-                              <div className="text-xs text-gray-500">
-                                QTY: {produto.qty} | MOQ: {produto.MOQ} | CTNS: {produto.ctns}
-                              </div>
+                          <div className="space-y-2">
+                            {/* REF */}
+                            <div>
+                              <div className="text-xs text-gray-500 uppercase tracking-wide">REF</div>
+                              <div className="font-semibold text-gray-900 text-lg">{produto.referencia}</div>
                             </div>
                             
-                            {/* Preço */}
-                            <div className="text-right ml-4">
-                              <div className="text-lg font-bold text-gray-900">
+                            {/* Description */}
+                            <div>
+                              <div className="text-xs text-gray-500 uppercase tracking-wide">Description</div>
+                              <div className="text-gray-700">{produto.description}</div>
+                            </div>
+                            
+                            {/* U.PRICE RMB */}
+                            <div>
+                              <div className="text-xs text-gray-500 uppercase tracking-wide">U.PRICE RMB</div>
+                              <div className="text-xl font-bold text-gray-900">
                                 ¥{produto.unitPriceRmb.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </div>
-                              <div className="text-sm text-gray-500">RMB</div>
-                              <div className="text-xs text-gray-400">
-                                Total: ¥{(produto.unitPriceRmb * produto.qty).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </div>
                             </div>
                           </div>
