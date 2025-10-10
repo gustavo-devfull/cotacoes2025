@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { CotacaoItem } from '../types';
+import { BaseProdutoItem } from '../services/baseProdutosService';
 
 export interface ExportOptions {
   filename?: string;
@@ -120,4 +121,106 @@ export const formatDateForFilename = (): string => {
   const minutes = String(now.getMinutes()).padStart(2, '0');
   
   return `produtos_exportados_${year}${month}${day}_${hours}${minutes}.xlsx`;
+};
+
+export const formatDateForBaseProdutosFilename = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  
+  return `base_produtos_${year}${month}${day}_${hours}${minutes}.xlsx`;
+};
+
+export const exportBaseProdutosToExcel = (
+  data: BaseProdutoItem[],
+  options: ExportOptions = {}
+): void => {
+  const {
+    filename = 'base_produtos.xlsx',
+    sheetName = 'Base de Produtos'
+  } = options;
+
+  // Preparar dados para exportação
+  const exportData = data.map(item => ({
+    'Linha Cotações': item.linhaCotacoes,
+    'Referência': item.referencia,
+    'Fábrica': item.fabrica,
+    'Item No': item.itemNo,
+    'Description': item.description,
+    'Name': item.name,
+    'Remark': item.remark,
+    'OBS': item.obs,
+    'MOQ': item.moq,
+    'Unit/Ctn': item.unitCtn,
+    'Unit Price RMB': item.unitPriceRmb,
+    'Unit': item.unit,
+    'L': item.l,
+    'W': item.w,
+    'H': item.h,
+    'CBM': item.cbm,
+    'G.W': item.gw,
+    'N.W': item.nw,
+    'Peso Unitário': item.pesoUnitario,
+    'Marca': item.marca,
+    'Cod Ravi': item.codRavi,
+    'EAN': item.ean,
+    'DUN': item.dun,
+    'Nome Invoice EN': item.nomeInvoiceEn,
+    'Nome DI NB': item.nomeDiNb,
+    'Nome Ravi Profit': item.nomeRaviProfit,
+    'Qt Min Venda': item.qtMinVenda,
+    'NCM': item.ncm,
+    'CEST': item.cest,
+    'Valor Invoice USD': item.valorInvoiceUsd,
+    'OBS Pedido': item.obsPedido
+  }));
+
+  // Criar workbook
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(exportData);
+
+  // Ajustar largura das colunas
+  const colWidths = [
+    { wch: 15 }, // Linha Cotações
+    { wch: 12 }, // Referência
+    { wch: 20 }, // Fábrica
+    { wch: 12 }, // Item No
+    { wch: 30 }, // Description
+    { wch: 20 }, // Name
+    { wch: 30 }, // Remark
+    { wch: 20 }, // OBS
+    { wch: 8 },  // MOQ
+    { wch: 10 }, // Unit/Ctn
+    { wch: 12 }, // Unit Price RMB
+    { wch: 8 },  // Unit
+    { wch: 8 },  // L
+    { wch: 8 },  // W
+    { wch: 8 },  // H
+    { wch: 8 },  // CBM
+    { wch: 8 },  // G.W
+    { wch: 8 },  // N.W
+    { wch: 12 }, // Peso Unitário
+    { wch: 15 }, // Marca
+    { wch: 12 }, // Cod Ravi
+    { wch: 15 }, // EAN
+    { wch: 15 }, // DUN
+    { wch: 25 }, // Nome Invoice EN
+    { wch: 15 }, // Nome DI NB
+    { wch: 15 }, // Nome Ravi Profit
+    { wch: 12 }, // Qt Min Venda
+    { wch: 12 }, // NCM
+    { wch: 12 }, // CEST
+    { wch: 15 }, // Valor Invoice USD
+    { wch: 20 }  // OBS Pedido
+  ];
+  ws['!cols'] = colWidths;
+
+  // Adicionar worksheet ao workbook
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+  // Salvar arquivo
+  XLSX.writeFile(wb, filename);
 };

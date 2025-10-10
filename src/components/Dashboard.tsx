@@ -13,10 +13,11 @@ import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
 import { useAlertModal } from '../hooks/useAlertModal';
 import { useUsers } from '../contexts/UsersContext';
-import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare } from 'lucide-react';
+import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare, FileSpreadsheet } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { sortData, getNextSortDirection } from '../utils/sortUtils';
-import { exportToExcel, formatDateForFilename } from '../utils/excelExport';
+import { exportToExcel, formatDateForFilename, exportBaseProdutosToExcel, formatDateForBaseProdutosFilename } from '../utils/excelExport';
+import { convertCotacoesToBaseProdutos, removeDuplicates, sortBaseProdutos } from '../services/baseProdutosService';
 import { productSelectionService } from '../services/productSelectionService';
 import { commentsService } from '../services/commentsService';
 import { notificationsService } from '../services/notificationsService';
@@ -47,6 +48,7 @@ const Dashboard: React.FC = () => {
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [exportedProducts, setExportedProducts] = useState<Set<string>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingBaseProdutos, setIsExportingBaseProdutos] = useState(false);
   const [showOnlyExported, setShowOnlyExported] = useState(false);
   
   // Hooks para comentários, notificações e usuário
@@ -707,6 +709,41 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Função para exportar base de produtos
+  const handleExportBaseProdutos = async () => {
+    if (allData.length === 0) {
+      showWarning('Nenhum Dado', 'Nenhum produto disponível para exportação da base.');
+      return;
+    }
+
+    setIsExportingBaseProdutos(true);
+    
+    try {
+      // Converter dados para base de produtos
+      const baseProdutos = convertCotacoesToBaseProdutos(allData);
+      
+      // Remover duplicatas baseado na referência e fabrica
+      const uniqueBaseProdutos = removeDuplicates(baseProdutos);
+      
+      // Ordenar por fabrica e referencia
+      const sortedBaseProdutos = sortBaseProdutos(uniqueBaseProdutos);
+      
+      const filename = formatDateForBaseProdutosFilename();
+      exportBaseProdutosToExcel(sortedBaseProdutos, {
+        filename,
+        sheetName: 'Base de Produtos',
+        includeHeaders: true
+      });
+
+      showSuccess('Base de Produtos Exportada', `${sortedBaseProdutos.length} produtos únicos exportados com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao exportar base de produtos:', error);
+      showError('Erro na Exportação', 'Erro ao exportar base de produtos. Verifique o console para mais detalhes.');
+    } finally {
+      setIsExportingBaseProdutos(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -764,6 +801,15 @@ const Dashboard: React.FC = () => {
                 >
                   <Download className="w-4 h-4" />
                   {isExporting ? 'Exportando...' : `Exportar (${selectedProducts.size})`}
+                </button>
+
+                <button
+                  onClick={handleExportBaseProdutos}
+                  className="btn-primary flex items-center gap-2 px-3 py-1.5 text-sm"
+                  disabled={isExportingBaseProdutos || allData.length === 0}
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  {isExportingBaseProdutos ? 'Gerando Base...' : 'Base de Produtos'}
                 </button>
               </div>
               
