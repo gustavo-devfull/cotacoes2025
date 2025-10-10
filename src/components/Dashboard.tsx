@@ -14,6 +14,7 @@ import { useLightbox } from '../hooks/useLightbox';
 import { useAlertModal } from '../hooks/useAlertModal';
 import { useUsers } from '../contexts/UsersContext';
 import { useExportedProducts } from '../contexts/ExportedProductsContext';
+import { useProdutosJaExportados } from '../contexts/ProdutosJaExportadosContext';
 import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare, FileSpreadsheet } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { sortData, getNextSortDirection } from '../utils/sortUtils';
@@ -48,6 +49,7 @@ const Dashboard: React.FC = () => {
   // Estados para exportação
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const { exportedProducts, setExportedProducts, addExportedProducts } = useExportedProducts();
+  const { totalExportados, adicionarProdutos } = useProdutosJaExportados();
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingBaseProdutos, setIsExportingBaseProdutos] = useState(false);
   const [showOnlyExported, setShowOnlyExported] = useState(false);
@@ -666,6 +668,10 @@ const Dashboard: React.FC = () => {
       // Marcar produtos como exportados e desmarcar seleção
       const exportedIds = selectedData.map(item => `${item.PHOTO_NO}-${item.referencia}`);
       addExportedProducts(exportedIds);
+      
+      // Adicionar ao contador total de produtos já exportados
+      await adicionarProdutos(selectedData.length);
+      
       setSelectedProducts(new Set<string>());
 
       // Salvar estados no Firebase
@@ -998,6 +1004,10 @@ const Dashboard: React.FC = () => {
                 <Package className="w-6 h-6 text-primary-600" />
                 Cotações ({filteredData.length} itens)
               </h2>
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
+                <span className="text-blue-700 font-medium">ProdutosJaExportados:</span>
+                <span className="text-blue-800 font-semibold">{totalExportados}</span>
+              </div>
               <button
                 onClick={() => window.location.reload()}
                 className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
