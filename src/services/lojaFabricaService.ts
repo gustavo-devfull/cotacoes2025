@@ -1,5 +1,5 @@
 import { CotacaoItem, LojaFabrica } from '../types';
-import { updateCotacao } from './cotacaoService';
+import { updateCotacao, CotacaoDocument } from './cotacaoService';
 
 // Serviço para gerenciar dados de Lojas/Fábricas extraídos das cotações
 export class LojaFabricaService {
@@ -147,7 +147,7 @@ export class LojaFabricaService {
   // Atualizar produtos associados a uma loja quando ela for editada
   static async updateProdutosAssociados(
     lojaId: string, 
-    cotacoes: CotacaoItem[], 
+    cotacoes: CotacaoDocument[], 
     novosDados: { nome?: string; segmento?: string }
   ): Promise<void> {
     try {
@@ -182,14 +182,9 @@ export class LojaFabricaService {
         
         // Só atualizar se houver mudanças
         if (Object.keys(updates).length > 0) {
-          // Assumindo que o produto tem um ID (se estiver vindo do Firebase)
-          if ('id' in produto && produto.id) {
-            console.log(`💾 Salvando produto ${produto.id} com updates:`, updates);
-            await updateCotacao(produto.id, updates);
-            console.log(`✅ Produto ${produto.id} atualizado com sucesso`);
-          } else {
-            console.warn(`⚠️ Produto sem ID não pode ser atualizado:`, produto);
-          }
+          console.log(`💾 Salvando produto ${produto.id} com updates:`, updates);
+          await updateCotacao(produto.id, updates);
+          console.log(`✅ Produto ${produto.id} atualizado com sucesso`);
         } else {
           console.log(`ℹ️ Produto ${produto.referencia} não precisa de atualização`);
         }

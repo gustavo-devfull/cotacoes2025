@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, Tag, BarChart3, Package, DollarSign, TrendingUp } from 'lucide-react';
 import { LojaFabrica, CotacaoItem } from '../types';
 import { LojaFabricaService } from '../services/lojaFabricaService';
-import { getCotacoes, convertToCotacaoItem } from '../services/cotacaoService';
+import { getCotacoes, convertToCotacaoItem, CotacaoDocument } from '../services/cotacaoService';
 import { mockData } from '../data/mockData';
 
 const LojaFabricaManagement: React.FC = () => {
   const [lojas, setLojas] = useState<LojaFabrica[]>([]);
   const [cotacoes, setCotacoes] = useState<CotacaoItem[]>([]);
+  const [cotacoesDocuments, setCotacoesDocuments] = useState<CotacaoDocument[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentoFilter, setSegmentoFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +34,7 @@ const LojaFabricaManagement: React.FC = () => {
         const cotacaoItems = cotacoesFirebase.map(convertToCotacaoItem);
         
         setCotacoes(cotacaoItems);
+        setCotacoesDocuments(cotacoesFirebase); // Manter documentos originais com IDs
         
         // Extrair lojas únicas dos dados de cotação
         const lojasExtraidas = LojaFabricaService.extractLojasFromCotacoes(cotacaoItems);
@@ -48,6 +50,7 @@ const LojaFabricaManagement: React.FC = () => {
         
         // Fallback para dados mock
         setCotacoes(mockData);
+        setCotacoesDocuments([]); // Mock data não tem IDs do Firebase
         const lojasMock = LojaFabricaService.extractLojasFromCotacoes(mockData);
         setLojas(lojasMock);
         
@@ -122,13 +125,14 @@ const LojaFabricaManagement: React.FC = () => {
         // Se houve mudanças no nome ou segmento, atualizar produtos associados
         if (mudancas.nome || mudancas.segmento) {
           console.log('🔄 Atualizando produtos associados devido a mudanças na loja');
-          await LojaFabricaService.updateProdutosAssociados(editingLoja.id, cotacoes, mudancas);
+          await LojaFabricaService.updateProdutosAssociados(editingLoja.id, cotacoesDocuments, mudancas);
           
           // Recarregar dados do Firebase após atualização
           console.log('🔄 Recarregando dados após atualização dos produtos');
           const cotacoesAtualizadas = await getCotacoes();
           const cotacaoItemsAtualizados = cotacoesAtualizadas.map(convertToCotacaoItem);
           setCotacoes(cotacaoItemsAtualizados);
+          setCotacoesDocuments(cotacoesAtualizadas); // Atualizar documentos também
           
           // Re-extrair lojas com dados atualizados
           const lojasAtualizadas = LojaFabricaService.extractLojasFromCotacoes(cotacaoItemsAtualizados);
