@@ -466,19 +466,16 @@ const LojaFabricaManagement: React.FC = () => {
                           <div className="space-y-2">
                             {/* REF */}
                             <div>
-                              <div className="text-xs text-gray-500 uppercase tracking-wide">REF</div>
                               <div className="font-semibold text-gray-900 text-lg">{produto.referencia}</div>
                             </div>
                             
                             {/* Description */}
                             <div>
-                              <div className="text-xs text-gray-500 uppercase tracking-wide">Description</div>
                               <div className="text-gray-700">{produto.description}</div>
                             </div>
                             
                             {/* U.PRICE RMB */}
                             <div>
-                              <div className="text-xs text-gray-500 uppercase tracking-wide">U.PRICE RMB</div>
                               <div className="text-xl font-bold text-gray-900">
                                 ¥{produto.unitPriceRmb.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </div>
