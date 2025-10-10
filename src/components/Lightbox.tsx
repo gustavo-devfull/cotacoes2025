@@ -140,7 +140,7 @@ const Lightbox: React.FC<LightboxProps> = ({
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 max-w-full overflow-x-auto px-4">
           {images.map((image, index) => (
             <button
-              key={index}
+              key={`lightbox-thumb-${index}-${image}`}
               onClick={() => onNavigate(index)}
               className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                 index === currentIndex 

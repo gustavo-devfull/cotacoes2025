@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, X, Download } from 'lucide-react';
 import { CotacaoItem } from '../types';
 import { convertSpreadsheetRowToCotacao, validateImportedData, SpreadsheetRow } from '../utils/spreadsheetMapping';
+import { checkDuplicates } from '../services/cotacaoService';
 import { useAlertModal } from '../hooks/useAlertModal';
 
 interface ImportComponentProps {
@@ -27,6 +28,8 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
     invalid: number;
     errors: { item: CotacaoItem; errors: string[] }[];
     validData: CotacaoItem[];
+    duplicates?: CotacaoItem[];
+    duplicateReferences?: string[];
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,27 +43,27 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
       return;
     }
 
-    if (!shopNo.trim()) {
+    if (!shopNo || (typeof shopNo === 'string' && !shopNo.trim())) {
       showWarning('Campo Obrigatório', 'Por favor, preencha o campo SHOP NO antes de importar a planilha');
       return;
     }
 
-    if (!nomeContato.trim()) {
+    if (!nomeContato || (typeof nomeContato === 'string' && !nomeContato.trim())) {
       showWarning('Campo Obrigatório', 'Por favor, preencha o campo Nome do Contato antes de importar a planilha');
       return;
     }
 
-    if (!telefoneContato.trim()) {
+    if (!telefoneContato || (typeof telefoneContato === 'string' && !telefoneContato.trim())) {
       showWarning('Campo Obrigatório', 'Por favor, preencha o campo Telefone do Contato antes de importar a planilha');
       return;
     }
 
-    if (!dataCotacao.trim()) {
+    if (!dataCotacao || (typeof dataCotacao === 'string' && !dataCotacao.trim())) {
       showWarning('Campo Obrigatório', 'Por favor, preencha o campo Data da Cotação antes de importar a planilha');
       return;
     }
 
-    if (!segmento.trim()) {
+    if (!segmento || (typeof segmento === 'string' && !segmento.trim())) {
       showWarning('Campo Obrigatório', 'Por favor, preencha o campo Segmento antes de importar a planilha');
       return;
     }
@@ -218,18 +221,31 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
       
       // Validar dados
       const validation = validateImportedData(convertedData);
+      
+      // Verificar duplicatas no sistema
+      const duplicateCheck = await checkDuplicates(validation.valid);
+      
+      console.log('📊 Resultado da validação:', {
+        total: convertedData.length,
+        valid: validation.valid.length,
+        invalid: validation.invalid.length,
+        duplicates: duplicateCheck.duplicates.length,
+        newItems: duplicateCheck.newItems.length
+      });
 
       setImportResult({
         total: convertedData.length,
         valid: validation.valid.length,
         invalid: validation.invalid.length,
         errors: validation.invalid,
-        validData: validation.valid
+        validData: validation.valid,
+        duplicates: duplicateCheck.duplicates,
+        duplicateReferences: duplicateCheck.duplicateReferences
       });
 
-      // Se todos os dados são válidos, aplicar automaticamente
-      if (validation.invalid.length === 0) {
-        onImportComplete(validation.valid);
+      // Se todos os dados são válidos e não há duplicatas, aplicar automaticamente
+      if (validation.invalid.length === 0 && duplicateCheck.duplicates.length === 0) {
+        onImportComplete(duplicateCheck.newItems);
       }
 
       } catch (error: any) {
@@ -280,7 +296,18 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
 
   const applyValidData = () => {
     if (importResult && importResult.validData.length > 0) {
-      onImportComplete(importResult.validData);
+      // Filtrar apenas os dados que não são duplicatas
+      const newData = importResult.validData.filter(item => 
+        !importResult.duplicates?.some(dup => dup.referencia === item.referencia)
+      );
+      
+      console.log('📊 Aplicando dados:', {
+        total: importResult.validData.length,
+        novos: newData.length,
+        duplicatas: importResult.validData.length - newData.length
+      });
+      
+      onImportComplete(newData);
     }
   };
 
@@ -535,7 +562,7 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
               </div>
 
               {/* Estatísticas */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <p className="text-2xl font-bold text-gray-900">{importResult.total}</p>
                   <p className="text-sm text-gray-600">Total</p>
@@ -548,6 +575,10 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                   <p className="text-2xl font-bold text-red-600">{importResult.invalid}</p>
                   <p className="text-sm text-red-600">Inválidos</p>
                 </div>
+                <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                  <p className="text-2xl font-bold text-yellow-600">{importResult.duplicates?.length || 0}</p>
+                  <p className="text-sm text-yellow-600">Duplicatas</p>
+                </div>
               </div>
 
               {/* Erros */}
@@ -559,15 +590,37 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                   </h4>
                   <div className="max-h-40 overflow-y-auto space-y-2">
                     {importResult.errors.map((error, index) => (
-                      <div key={index} className="bg-red-50 p-3 rounded-lg">
+                      <div key={`import-error-${index}-${error.item.PHOTO_NO}`} className="bg-red-50 p-3 rounded-lg">
                         <p className="text-sm font-medium text-red-800">
                           REF: {error.item.PHOTO_NO}
                         </p>
                         <ul className="text-xs text-red-600 mt-1">
                           {error.errors.map((err, errIndex) => (
-                            <li key={errIndex}>• {err}</li>
+                            <li key={`error-detail-${index}-${errIndex}`}>• {err}</li>
                           ))}
                         </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Duplicatas */}
+              {importResult.duplicates && importResult.duplicates.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    Referências Duplicadas
+                  </h4>
+                  <div className="max-h-40 overflow-y-auto space-y-2">
+                    {importResult.duplicateReferences?.map((ref, index) => (
+                      <div key={`duplicate-${index}-${ref}`} className="bg-yellow-50 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-yellow-800">
+                          REF: {ref}
+                        </p>
+                        <p className="text-xs text-yellow-600 mt-1">
+                          Esta referência já existe no sistema e será ignorada
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -582,7 +635,7 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                     className="btn-primary flex-1 flex items-center justify-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Aplicar Dados Válidos ({importResult.valid})
+                    Aplicar Dados Novos ({importResult.valid - (importResult.duplicates?.length || 0)})
                   </button>
                 )}
                 <button

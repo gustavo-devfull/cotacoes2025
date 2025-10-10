@@ -94,15 +94,88 @@ export const deleteCotacao = async (id: string): Promise<void> => {
   }
 };
 
-// Função para adicionar múltiplas cotações (importação)
+// Função para adicionar múltiplas cotações (importação) com validação de duplicatas
 export const addMultipleCotacoes = async (cotacoes: CotacaoItem[]): Promise<string[]> => {
   try {
-    const promises = cotacoes.map(cotacao => addCotacao(cotacao));
+    console.log('🔄 Iniciando importação de', cotacoes.length, 'cotações...');
+    
+    // Buscar cotações existentes para verificar duplicatas
+    const existingCotacoes = await getCotacoes();
+    const existingReferences = new Set(existingCotacoes.map(cotacao => cotacao.referencia));
+    
+    console.log('📋 Referências existentes encontradas:', existingReferences.size);
+    
+    // Filtrar apenas cotações que não são duplicatas
+    const newCotacoes = cotacoes.filter(cotacao => {
+      const isDuplicate = existingReferences.has(cotacao.referencia);
+      if (isDuplicate) {
+        console.log('⚠️ Duplicata encontrada:', cotacao.referencia);
+      }
+      return !isDuplicate;
+    });
+    
+    console.log('✅ Cotações novas para importar:', newCotacoes.length);
+    console.log('⚠️ Cotações duplicadas ignoradas:', cotacoes.length - newCotacoes.length);
+    
+    if (newCotacoes.length === 0) {
+      console.log('ℹ️ Nenhuma cotação nova para importar');
+      return [];
+    }
+    
+    // Adicionar apenas as cotações novas
+    const promises = newCotacoes.map(cotacao => addCotacao(cotacao));
     const ids = await Promise.all(promises);
-    console.log('Múltiplas cotações adicionadas:', ids.length);
+    
+    console.log('✅ Importação concluída:', ids.length, 'cotações adicionadas');
     return ids;
   } catch (error) {
-    console.error('Erro ao adicionar múltiplas cotações:', error);
+    console.error('❌ Erro ao adicionar múltiplas cotações:', error);
+    throw error;
+  }
+};
+
+// Função para verificar duplicatas antes da importação
+export const checkDuplicates = async (cotacoes: CotacaoItem[]): Promise<{
+  newItems: CotacaoItem[];
+  duplicates: CotacaoItem[];
+  duplicateReferences: string[];
+}> => {
+  try {
+    console.log('🔍 Verificando duplicatas para', cotacoes.length, 'cotações...');
+    
+    // Buscar cotações existentes
+    const existingCotacoes = await getCotacoes();
+    const existingReferences = new Set(existingCotacoes.map(cotacao => cotacao.referencia));
+    
+    // Separar novos itens e duplicatas
+    const newItems: CotacaoItem[] = [];
+    const duplicates: CotacaoItem[] = [];
+    const duplicateReferences: string[] = [];
+    
+    cotacoes.forEach(cotacao => {
+      if (existingReferences.has(cotacao.referencia)) {
+        duplicates.push(cotacao);
+        if (!duplicateReferences.includes(cotacao.referencia)) {
+          duplicateReferences.push(cotacao.referencia);
+        }
+      } else {
+        newItems.push(cotacao);
+      }
+    });
+    
+    console.log('📊 Resultado da verificação:', {
+      novos: newItems.length,
+      duplicatas: duplicates.length,
+      referenciasDuplicadas: duplicateReferences.length
+    });
+    
+    return {
+      newItems,
+      duplicates,
+      duplicateReferences
+    };
+  } catch (error) {
+    console.error('❌ Erro ao verificar duplicatas:', error);
     throw error;
   }
 };

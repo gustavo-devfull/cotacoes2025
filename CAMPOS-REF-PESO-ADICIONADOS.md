@@ -122,3 +122,4 @@ O sistema agora está **100% compatível** com a planilha "cotação (20250820)"
 
 
 
+

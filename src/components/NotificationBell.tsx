@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, X, MessageCircle, Package, Clock, Check, CheckCheck } from 'lucide-react';
 import { Notification } from '../types';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
-import { useUsers } from '../hooks/useUsers';
+import { useUsers } from '../contexts/UsersContext';
 
 interface NotificationBellProps {
   notifications: Notification[];

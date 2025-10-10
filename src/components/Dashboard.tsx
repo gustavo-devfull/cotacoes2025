@@ -12,7 +12,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
 import { useAlertModal } from '../hooks/useAlertModal';
-import { useUsers } from '../hooks/useUsers';
+import { useUsers } from '../contexts/UsersContext';
 import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { sortData, getNextSortDirection } from '../utils/sortUtils';
@@ -266,21 +266,34 @@ const Dashboard: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Detectar referências duplicadas
-      const existingReferences = new Set(allData.map(item => item.referencia));
-      const processedData = importedData.map(item => ({
-        ...item,
-        isDuplicate: existingReferences.has(item.referencia)
-      }));
+      console.log('🔄 Processando importação de', importedData.length, 'itens...');
       
-      // Salvar dados importados no Firebase
-      await addMultipleCotacoes(processedData);
-      console.log('Dados importados salvos no Firebase:', processedData.length, 'itens');
+      // Salvar dados importados no Firebase (com validação de duplicatas)
+      const savedIds = await addMultipleCotacoes(importedData);
       
-      // Mostrar aviso se houver duplicatas
-      const duplicateCount = processedData.filter(item => item.isDuplicate).length;
-      if (duplicateCount > 0) {
-        showWarning('Referências Duplicadas', `${duplicateCount} produto(s) com referência já existente foram destacados em vermelho claro.`);
+      // Calcular estatísticas da importação
+      const totalImported = importedData.length;
+      const actuallySaved = savedIds.length;
+      const duplicatesIgnored = totalImported - actuallySaved;
+      
+      console.log('📊 Estatísticas da importação:', {
+        total: totalImported,
+        salvos: actuallySaved,
+        duplicatas: duplicatesIgnored
+      });
+      
+      // Mostrar resultado da importação
+      if (actuallySaved > 0 && duplicatesIgnored > 0) {
+        showInfo(
+          'Importação Concluída', 
+          `${actuallySaved} produto(s) importado(s) com sucesso. ${duplicatesIgnored} produto(s) duplicado(s) foram ignorados.`
+        );
+      } else if (actuallySaved > 0) {
+        showSuccess('Importação Concluída', `${actuallySaved} produto(s) importado(s) com sucesso.`);
+      } else if (duplicatesIgnored > 0) {
+        showWarning('Nenhum Produto Novo', `Todos os ${duplicatesIgnored} produto(s) já existem no sistema.`);
+      } else {
+        showWarning('Importação Vazia', 'Nenhum produto foi importado.');
       }
       
       setShowImportModal(false);
@@ -366,51 +379,102 @@ const Dashboard: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  // Função auxiliar para excluir um produto individual com tratamento de erro robusto
+  const deleteSingleProduct = async (item: CotacaoItem): Promise<{
+    success: boolean;
+    commentsDeleted: number;
+    notificationsDeleted: number;
+    error?: string;
+  }> => {
+    try {
+      const itemId = `${item.PHOTO_NO}-${item.referencia}`;
+      console.log(`🗑️ Excluindo produto: ${itemId}`);
+      
+      // Buscar o documento no Firebase
+      const cotacoes = await getCotacoes();
+      const cotacaoDoc = cotacoes.find(doc => 
+        doc.PHOTO_NO === item.PHOTO_NO && doc.referencia === item.referencia
+      );
+
+      if (!cotacaoDoc) {
+        return {
+          success: false,
+          commentsDeleted: 0,
+          notificationsDeleted: 0,
+          error: `Documento não encontrado no Firebase: ${itemId}`
+        };
+      }
+
+      // Gerar ID do produto para buscar comentários e notificações
+      const productId = commentsService.generateProductId(item.PHOTO_NO, item.referencia);
+      
+      let commentsDeleted = 0;
+      let notificationsDeleted = 0;
+      
+      // Excluir comentários associados ao produto
+      try {
+        commentsDeleted = await commentsService.deleteCommentsByProductId(productId);
+        console.log(`✅ Excluídos ${commentsDeleted} comentários para: ${itemId}`);
+      } catch (commentError) {
+        console.error(`❌ Erro ao excluir comentários de ${itemId}:`, commentError);
+        // Continuar mesmo se falhar na exclusão de comentários
+      }
+      
+      // Excluir notificações associadas ao produto
+      try {
+        notificationsDeleted = await notificationsService.deleteNotificationsByProductId(productId);
+        console.log(`✅ Excluídas ${notificationsDeleted} notificações para: ${itemId}`);
+      } catch (notificationError) {
+        console.error(`❌ Erro ao excluir notificações de ${itemId}:`, notificationError);
+        // Continuar mesmo se falhar na exclusão de notificações
+      }
+      
+      // Excluir produto do Firebase
+      await deleteCotacao(cotacaoDoc.id);
+      console.log(`✅ Produto excluído do Firebase: ${itemId}`);
+      
+      return {
+        success: true,
+        commentsDeleted,
+        notificationsDeleted
+      };
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error(`❌ Erro ao excluir produto ${item.PHOTO_NO}-${item.referencia}:`, error);
+      return {
+        success: false,
+        commentsDeleted: 0,
+        notificationsDeleted: 0,
+        error: errorMessage
+      };
+    }
+  };
+
   const handleDeleteMultipleItems = async (items: CotacaoItem[], onProgress?: (progress: number) => void) => {
     try {
       const totalItems = items.length;
       let totalCommentsDeleted = 0;
       let totalNotificationsDeleted = 0;
+      let successfullyDeleted = 0;
+      let failedDeletions: string[] = [];
       
-      // Buscar todos os documentos do Firebase para encontrar os IDs reais
-      const cotacoes = await getCotacoes();
+      console.log(`🔄 Iniciando exclusão de ${totalItems} produtos...`);
       
-      // Excluir cada item individualmente
+      // Excluir cada item usando a função auxiliar
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
+        const itemId = `${item.PHOTO_NO}-${item.referencia}`;
         
-        // Encontrar o documento real no Firebase
-        const cotacaoDoc = cotacoes.find(doc => 
-          doc.PHOTO_NO === item.PHOTO_NO && doc.referencia === item.referencia
-        );
+        const result = await deleteSingleProduct(item);
         
-        if (cotacaoDoc) {
-          // Gerar ID do produto para buscar comentários e notificações
-          const productId = commentsService.generateProductId(item.PHOTO_NO, item.referencia);
-          
-          // Excluir comentários associados ao produto
-          try {
-            const commentsDeleted = await commentsService.deleteCommentsByProductId(productId);
-            totalCommentsDeleted += commentsDeleted;
-            console.log(`Excluídos ${commentsDeleted} comentários para o produto:`, productId);
-          } catch (commentError) {
-            console.error('Erro ao excluir comentários do produto:', productId, commentError);
-          }
-          
-          // Excluir notificações associadas ao produto
-          try {
-            const notificationsDeleted = await notificationsService.deleteNotificationsByProductId(productId);
-            totalNotificationsDeleted += notificationsDeleted;
-            console.log(`Excluídas ${notificationsDeleted} notificações para o produto:`, productId);
-          } catch (notificationError) {
-            console.error('Erro ao excluir notificações do produto:', productId, notificationError);
-          }
-          
-          // Excluir produto do Firebase
-          await deleteCotacao(cotacaoDoc.id);
-          console.log('Item excluído do Firebase:', cotacaoDoc.id);
+        if (result.success) {
+          successfullyDeleted++;
+          totalCommentsDeleted += result.commentsDeleted;
+          totalNotificationsDeleted += result.notificationsDeleted;
         } else {
-          console.warn('Documento não encontrado no Firebase para exclusão:', item.PHOTO_NO, item.referencia);
+          failedDeletions.push(itemId);
+          console.warn(`⚠️ Falha ao excluir ${itemId}: ${result.error}`);
         }
         
         // Atualizar progresso
@@ -418,35 +482,66 @@ const Dashboard: React.FC = () => {
         onProgress?.(progress);
         
         // Pequeno delay para mostrar o progresso
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
       
-      // Atualizar os dados locais
-      const itemIds = items.map(item => `${item.PHOTO_NO}-${item.referencia}`);
-      setAllData(prev => prev.filter(i => !itemIds.includes(`${i.PHOTO_NO}-${i.referencia}`)));
-      setFilteredData(prev => prev.filter(i => !itemIds.includes(`${i.PHOTO_NO}-${i.referencia}`)));
+      console.log(`📊 Resultado da exclusão:`, {
+        total: totalItems,
+        sucesso: successfullyDeleted,
+        falhas: failedDeletions.length,
+        comentarios: totalCommentsDeleted,
+        notificacoes: totalNotificationsDeleted
+      });
+      
+      // Atualizar os dados locais apenas para os itens que foram excluídos com sucesso
+      const successfullyDeletedIds = items
+        .filter(item => !failedDeletions.includes(`${item.PHOTO_NO}-${item.referencia}`))
+        .map(item => `${item.PHOTO_NO}-${item.referencia}`);
+      
+      setAllData(prev => prev.filter(i => !successfullyDeletedIds.includes(`${i.PHOTO_NO}-${i.referencia}`)));
+      setFilteredData(prev => prev.filter(i => !successfullyDeletedIds.includes(`${i.PHOTO_NO}-${i.referencia}`)));
       
       setShowEditModal(false);
       
-      // Mensagem de sucesso incluindo comentários e notificações excluídos
-      let successMessage = `${items.length} produto(s) excluído(s) com sucesso!`;
-      const additionalItems = [];
-      
-      if (totalCommentsDeleted > 0) {
-        additionalItems.push(`${totalCommentsDeleted} comentário(s)`);
+      // Mensagem de resultado detalhada
+      if (successfullyDeleted === totalItems) {
+        // Todos os itens foram excluídos com sucesso
+        let successMessage = `${successfullyDeleted} produto(s) excluído(s) com sucesso!`;
+        const additionalItems = [];
+        
+        if (totalCommentsDeleted > 0) {
+          additionalItems.push(`${totalCommentsDeleted} comentário(s)`);
+        }
+        
+        if (totalNotificationsDeleted > 0) {
+          additionalItems.push(`${totalNotificationsDeleted} notificação(ões)`);
+        }
+        
+        if (additionalItems.length > 0) {
+          successMessage = `${successfullyDeleted} produto(s) e ${additionalItems.join(', ')} excluído(s) com sucesso!`;
+        }
+        
+        showSuccess('Exclusão Concluída', successMessage);
+      } else if (successfullyDeleted > 0) {
+        // Alguns itens foram excluídos, outros falharam
+        const failedCount = failedDeletions.length;
+        let message = `${successfullyDeleted} de ${totalItems} produto(s) excluído(s) com sucesso.`;
+        
+        if (failedCount > 0) {
+          message += ` ${failedCount} produto(s) não puderam ser excluídos.`;
+        }
+        
+        showWarning('Exclusão Parcial', message);
+        
+        // Log detalhado das falhas
+        console.warn('Produtos que falharam na exclusão:', failedDeletions);
+      } else {
+        // Nenhum item foi excluído
+        showError('Falha na Exclusão', 'Nenhum produto pôde ser excluído. Verifique o console para mais detalhes.');
       }
       
-      if (totalNotificationsDeleted > 0) {
-        additionalItems.push(`${totalNotificationsDeleted} notificação(ões)`);
-      }
-      
-      if (additionalItems.length > 0) {
-        successMessage = `${items.length} produto(s) e ${additionalItems.join(', ')} excluído(s) com sucesso!`;
-      }
-      
-      showSuccess('Exclusão Concluída', successMessage);
     } catch (error) {
-      console.error('Erro ao excluir itens:', error);
+      console.error('❌ Erro geral ao excluir itens:', error);
       showError('Erro na Exclusão', 'Erro ao excluir itens. Verifique o console para mais detalhes.');
     }
   };
@@ -455,38 +550,9 @@ const Dashboard: React.FC = () => {
     if (!itemToDelete) return;
 
     try {
-      // Encontrar o documento no Firebase pelo PHOTO_NO e referencia
-      const cotacoes = await getCotacoes();
-      const cotacaoDoc = cotacoes.find(doc => 
-        doc.PHOTO_NO === itemToDelete.PHOTO_NO && doc.referencia === itemToDelete.referencia
-      );
-
-      if (cotacaoDoc) {
-        // Gerar ID do produto para buscar comentários e notificações
-        const productId = commentsService.generateProductId(itemToDelete.PHOTO_NO, itemToDelete.referencia);
-        
-        // Excluir comentários associados ao produto
-        let commentsDeleted = 0;
-        try {
-          commentsDeleted = await commentsService.deleteCommentsByProductId(productId);
-          console.log(`Excluídos ${commentsDeleted} comentários para o produto:`, productId);
-        } catch (commentError) {
-          console.error('Erro ao excluir comentários do produto:', productId, commentError);
-        }
-        
-        // Excluir notificações associadas ao produto
-        let notificationsDeleted = 0;
-        try {
-          notificationsDeleted = await notificationsService.deleteNotificationsByProductId(productId);
-          console.log(`Excluídas ${notificationsDeleted} notificações para o produto:`, productId);
-        } catch (notificationError) {
-          console.error('Erro ao excluir notificações do produto:', productId, notificationError);
-        }
-        
-        // Deletar produto do Firebase
-        await deleteCotacao(cotacaoDoc.id);
-        console.log('Item deletado do Firebase:', cotacaoDoc.id);
-        
+      const result = await deleteSingleProduct(itemToDelete);
+      
+      if (result.success) {
         // Atualizar dados locais
         setAllData(prev => prev.filter(item => 
           !(item.PHOTO_NO === itemToDelete.PHOTO_NO && item.referencia === itemToDelete.referencia)
@@ -499,12 +565,12 @@ const Dashboard: React.FC = () => {
         let successMessage = 'Produto excluído com sucesso!';
         const additionalItems = [];
         
-        if (commentsDeleted > 0) {
-          additionalItems.push(`${commentsDeleted} comentário(s)`);
+        if (result.commentsDeleted > 0) {
+          additionalItems.push(`${result.commentsDeleted} comentário(s)`);
         }
         
-        if (notificationsDeleted > 0) {
-          additionalItems.push(`${notificationsDeleted} notificação(ões)`);
+        if (result.notificationsDeleted > 0) {
+          additionalItems.push(`${result.notificationsDeleted} notificação(ões)`);
         }
         
         if (additionalItems.length > 0) {
@@ -513,12 +579,12 @@ const Dashboard: React.FC = () => {
         
         showSuccess('Exclusão Concluída', successMessage);
       } else {
-        console.error('Documento não encontrado no Firebase para exclusão');
-        showError('Erro na Exclusão', 'Produto não encontrado no sistema.');
+        showError('Erro na Exclusão', `Erro ao excluir produto: ${result.error}`);
       }
+      
     } catch (error) {
-      console.error('Erro ao deletar item do Firebase:', error);
-      showError('Erro na Exclusão', 'Erro ao deletar item. Verifique o console para mais detalhes.');
+      console.error('Erro ao excluir produto:', error);
+      showError('Erro na Exclusão', 'Erro ao excluir produto. Verifique o console para mais detalhes.');
     } finally {
       setShowDeleteModal(false);
       setItemToDelete(null);

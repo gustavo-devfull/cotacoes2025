@@ -382,3 +382,4 @@ const unsubscribe = subscribeToCotacoes((cotacoes: CotacaoDocument[]) => {
 
 
 
+

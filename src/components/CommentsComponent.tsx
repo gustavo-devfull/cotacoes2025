@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Image, X } from 'lucide-react';
 import { Comment as CommentType } from '../types';
 import { uploadService } from '../services/uploadService';
-import { useUsers } from '../hooks/useUsers';
+import { useUsers } from '../contexts/UsersContext';
 
 interface CommentsComponentProps {
   productId: string;
@@ -290,7 +290,7 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
                           <div className="grid grid-cols-2 gap-2 mt-2">
                             {comment.images.map((image, index) => (
                               <img
-                                key={index}
+                                key={`comment-${comment.id}-image-${index}`}
                                 src={image}
                                 alt={`Imagem ${index + 1}`}
                                 className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-all duration-200"
@@ -321,7 +321,7 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
                 <h4 className="text-sm font-medium text-gray-700">Arquivos selecionados:</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {selectedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <div key={`selected-file-${index}-${file.name}`} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                       <Image className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-700 truncate flex-1">
                         {file.name}

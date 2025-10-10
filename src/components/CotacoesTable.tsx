@@ -469,7 +469,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               
               return (
                 <tr 
-                  key={`${item.PHOTO_NO}-${index}`} 
+                  key={`${item.PHOTO_NO}-${item.referencia}-${index}`} 
                   className={`hover:bg-gray-50 transition-colors duration-150 ${
                     isDuplicate ? 'bg-red-50 border-l-4 border-l-red-400' :
                     isExported ? 'bg-green-50 border-l-4 border-l-green-400' : ''

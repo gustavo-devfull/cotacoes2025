@@ -19,61 +19,61 @@ export const FIELD_MAPPING: FieldMapping[] = [
     spreadsheetField: 'REF',
     systemField: 'referencia',
     required: true,
-    transform: (value: string) => value?.trim()
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() : ''
   },
   {
     spreadsheetField: 'REF',
     systemField: 'PHOTO_NO',
     required: true,
-    transform: (value: string) => value?.trim()
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() : ''
   },
   {
     spreadsheetField: 'REF',
     systemField: 'ITEM_NO',
     required: true,
-    transform: (value: string) => value?.trim()
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() : ''
   },
   {
     spreadsheetField: 'DESCRIPTION',
     systemField: 'description',
     required: true,
-    transform: (value: string) => value?.trim()
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() : ''
   },
   {
     spreadsheetField: 'NAME',
     systemField: 'name',
     required: true,
-    transform: (value: string) => value?.trim()
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() : ''
   },
   {
     spreadsheetField: 'REMARK',
     systemField: 'remark',
     required: false,
-    transform: (value: string) => value?.trim() || ''
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() || '' : ''
   },
   {
     spreadsheetField: 'OBS',
     systemField: 'obs',
     required: false,
-    transform: (value: string) => value?.trim() || ''
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() || '' : ''
   },
   {
     spreadsheetField: 'NCM',
     systemField: 'ncm',
     required: false,
-    transform: (value: string) => value?.trim() || ''
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() || '' : ''
   },
   {
     spreadsheetField: 'English Description',
     systemField: 'engdesciption',
     required: false,
-    transform: (value: string) => value?.trim() || ''
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() || '' : ''
   },
   {
     spreadsheetField: 'PHOTO',
     systemField: 'photo',
     required: false,
-    transform: (value: string) => value?.trim() || ''
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() || '' : ''
   },
   {
     spreadsheetField: 'CTNS',
@@ -107,7 +107,7 @@ export const FIELD_MAPPING: FieldMapping[] = [
     spreadsheetField: 'UNIT',
     systemField: 'unit',
     required: true,
-    transform: (value: string) => value?.trim() || 'PC'
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() : '' || 'PC'
   },
   {
     spreadsheetField: 'AMOUNT',
@@ -198,7 +198,11 @@ const generateNumCotacao = (ref: string): string => {
 };
 
 // Função para normalizar nomes de campos (remover espaços, converter para maiúscula, etc.)
-const normalizeFieldName = (fieldName: string): string => {
+const normalizeFieldName = (fieldName: any): string => {
+  if (!fieldName || typeof fieldName !== 'string') {
+    return '';
+  }
+  
   return fieldName
     .trim()
     .replace(/\s+/g, ' ') // Normalizar espaços múltiplos
@@ -244,7 +248,8 @@ export const convertSpreadsheetRowToCotacao = (
   segmento: string = ''
 ): import('../types').CotacaoItem => {
   // Primeiro, obter o REF para gerar NUM_COTACAO
-  const ref = findFieldInRow(row, 'REF')?.trim() || 'UNKNOWN';
+  const refValue = findFieldInRow(row, 'REF');
+  const ref = (refValue && typeof refValue === 'string') ? refValue.trim() : 'UNKNOWN';
   
     console.log('=== CONVERSÃO DE LINHA ===');
     console.log('Campos disponíveis na linha:', Object.keys(row));
@@ -311,9 +316,9 @@ export const validateImportedData = (data: import('../types').CotacaoItem[]): {
     const errors: string[] = [];
 
         // Validações obrigatórias - mais flexíveis
-        if (!item.referencia || item.referencia.trim() === '') errors.push('REF é obrigatório');
-        if (!item.description || item.description.trim() === '') errors.push('DESCRIPTION é obrigatório');
-        if (!item.name || item.name.trim() === '') errors.push('NAME é obrigatório');
+        if (!item.referencia || (typeof item.referencia === 'string' && item.referencia.trim() === '')) errors.push('REF é obrigatório');
+        if (!item.description || (typeof item.description === 'string' && item.description.trim() === '')) errors.push('DESCRIPTION é obrigatório');
+        if (!item.name || (typeof item.name === 'string' && item.name.trim() === '')) errors.push('NAME é obrigatório');
 
         // Validações numéricas - permitir 0 como valor válido para alguns campos
         if (item.unitPriceRmb < 0) errors.push('U.PRICE não pode ser negativo');
