@@ -13,6 +13,7 @@ import { useUser } from '../contexts/UserContext';
 import { useLightbox } from '../hooks/useLightbox';
 import { useAlertModal } from '../hooks/useAlertModal';
 import { useUsers } from '../contexts/UsersContext';
+import { useExportedProducts } from '../contexts/ExportedProductsContext';
 import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare, FileSpreadsheet } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { sortData, getNextSortDirection } from '../utils/sortUtils';
@@ -46,7 +47,7 @@ const Dashboard: React.FC = () => {
   
   // Estados para exportação
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [exportedProducts, setExportedProducts] = useState<Set<string>>(new Set());
+  const { exportedProducts, setExportedProducts, addExportedProducts } = useExportedProducts();
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingBaseProdutos, setIsExportingBaseProdutos] = useState(false);
   const [showOnlyExported, setShowOnlyExported] = useState(false);
@@ -664,19 +665,16 @@ const Dashboard: React.FC = () => {
 
       // Marcar produtos como exportados e desmarcar seleção
       const exportedIds = selectedData.map(item => `${item.PHOTO_NO}-${item.referencia}`);
-      const newExportedProducts = new Set([...exportedProducts, ...exportedIds]);
-      const newSelectedProducts = new Set<string>();
-      
-      setExportedProducts(newExportedProducts);
-      setSelectedProducts(newSelectedProducts);
+      addExportedProducts(exportedIds);
+      setSelectedProducts(new Set<string>());
 
       // Salvar estados no Firebase
       if (currentUser?.id) {
         try {
           await productSelectionService.saveSelectionState(
             currentUser.id, 
-            newSelectedProducts, 
-            newExportedProducts
+            new Set<string>(), 
+            exportedProducts
           );
         } catch (error) {
           console.error('Erro ao salvar estados de exportação:', error);

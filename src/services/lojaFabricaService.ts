@@ -42,14 +42,23 @@ export class LojaFabricaService {
   }
   
   // Obter estatísticas de uma loja específica
-  static getLojaStats(lojaId: string, cotacoes: CotacaoItem[]) {
+  static getLojaStats(lojaId: string, cotacoes: CotacaoItem[], exportedProducts?: Set<string>) {
     const lojaCotacoes = cotacoes.filter(cotacao => 
       `${cotacao.SHOP_NO}-${cotacao.nomeContato}-${cotacao.telefoneContato}` === lojaId
     );
     
+    // Calcular produtos exportados se o Set foi fornecido
+    let produtosExportados = 0;
+    if (exportedProducts) {
+      produtosExportados = lojaCotacoes.filter(cotacao => {
+        const itemId = `${cotacao.PHOTO_NO}-${cotacao.referencia}`;
+        return exportedProducts.has(itemId);
+      }).length;
+    }
+    
     return {
       totalCotacoes: lojaCotacoes.length,
-      totalItens: lojaCotacoes.reduce((sum, cotacao) => sum + cotacao.qty, 0),
+      totalItens: exportedProducts ? produtosExportados : lojaCotacoes.reduce((sum, cotacao) => sum + cotacao.qty, 0),
       valorTotal: lojaCotacoes.reduce((sum, cotacao) => sum + cotacao.amount, 0),
       cbmTotal: lojaCotacoes.reduce((sum, cotacao) => sum + cotacao.cbm_total, 0),
       ultimaCotacao: lojaCotacoes.length > 0 ? 
