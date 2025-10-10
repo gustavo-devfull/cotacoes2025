@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, BarChart3, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, BarChart3, Package, DollarSign, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { LojaFabrica, CotacaoItem } from '../types';
 import { LojaFabricaService } from '../services/lojaFabricaService';
 import { getCotacoes, convertToCotacaoItem, CotacaoDocument } from '../services/cotacaoService';
@@ -14,6 +14,7 @@ const LojaFabricaManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [editingLoja, setEditingLoja] = useState<LojaFabrica | null>(null);
   const [formData, setFormData] = useState({
     nome: '',
@@ -174,6 +175,10 @@ const LojaFabricaManagement: React.FC = () => {
     }
   };
 
+  const toggleCardExpansion = (lojaId: string) => {
+    setExpandedCard(expandedCard === lojaId ? null : lojaId);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -301,6 +306,54 @@ const LojaFabricaManagement: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Botão para expandir/colapsar */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => toggleCardExpansion(loja.id)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-lg transition-colors"
+                >
+                  {expandedCard === loja.id ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      Ocultar Produtos
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      Ver Produtos ({stats.totalCotacoes})
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Lista de Produtos (expandida) */}
+              {expandedCard === loja.id && (
+                <div className="mt-4 border-t border-gray-200 pt-4">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">Produtos desta Loja/Fábrica</h4>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {LojaFabricaService.getLojaProdutos(loja.id, cotacoes).map((produto, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-white rounded border flex items-center justify-center text-xs font-medium text-gray-600">
+                            {produto.PHOTO_NO || 'N/A'}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">{produto.referencia}</div>
+                            <div className="text-xs text-gray-500">{produto.description}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-gray-900">
+                            ¥{produto.unitPriceRmb.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </div>
+                          <div className="text-xs text-gray-500">RMB</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             </div>
           );
