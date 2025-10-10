@@ -446,7 +446,9 @@ const LojaFabricaManagement: React.FC = () => {
                 <div className="mt-4 border-t border-gray-200 pt-4">
                   <h4 className="text-sm font-medium text-gray-900 mb-3">Produtos desta Loja/Fábrica</h4>
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {LojaFabricaService.getLojaProdutos(loja.id, cotacoes).map((produto, index) => (
+                    {LojaFabricaService.getLojaProdutos(loja.id, cotacoes)
+                      .sort((a, b) => a.referencia.localeCompare(b.referencia))
+                      .map((produto, index) => (
                       <div key={index} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg">
                         {/* Imagem do produto - lado esquerdo */}
                         <div className="flex-shrink-0">
