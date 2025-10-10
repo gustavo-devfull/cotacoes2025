@@ -10,6 +10,9 @@ export class LojaFabricaService {
       const key = `${cotacao.SHOP_NO}-${cotacao.nomeContato}-${cotacao.telefoneContato}`;
       
       if (!lojasMap.has(key)) {
+        // Garantir que a data seja tratada corretamente (evitar problemas de fuso horário)
+        const dataCotacao = cotacao.dataCotacao ? new Date(cotacao.dataCotacao + 'T00:00:00') : new Date();
+        
         lojasMap.set(key, {
           id: key,
           nome: cotacao.SHOP_NO,
@@ -17,13 +20,13 @@ export class LojaFabricaService {
           telefone: cotacao.telefoneContato || '',
           segmento: cotacao.segmento || '',
           dataCotacao: cotacao.dataCotacao || '',
-          createdAt: new Date(), // Será atualizado com a data mais antiga
-          updatedAt: new Date()   // Será atualizado com a data mais recente
+          createdAt: dataCotacao,
+          updatedAt: dataCotacao
         });
       } else {
         // Atualizar datas se necessário
         const existingLoja = lojasMap.get(key)!;
-        const cotacaoDate = new Date(cotacao.dataCotacao);
+        const cotacaoDate = cotacao.dataCotacao ? new Date(cotacao.dataCotacao + 'T00:00:00') : new Date();
         
         if (cotacaoDate < existingLoja.createdAt) {
           existingLoja.createdAt = cotacaoDate;

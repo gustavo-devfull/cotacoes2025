@@ -184,7 +184,7 @@ const LojaFabricaManagement: React.FC = () => {
         {filteredLojas.map((loja) => {
           const stats = LojaFabricaService.getLojaStats(loja.id, cotacoes);
           return (
-            <div key={loja.id} className="card hover:shadow-lg transition-shadow duration-200">
+            <div key={loja.id} className="card hover:shadow-lg transition-shadow duration-200 p-6">
               {/* Card Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ const LojaFabricaManagement: React.FC = () => {
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600">
-                    {new Date(loja.dataCotacao).toLocaleDateString('pt-BR')}
+                    {loja.dataCotacao ? new Date(loja.dataCotacao + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}
                   </span>
                 </div>
               </div>
@@ -275,8 +275,8 @@ const LojaFabricaManagement: React.FC = () => {
               {/* Card Footer */}
               <div className="pt-4 border-t border-gray-200">
                 <div className="flex justify-between text-xs text-gray-500">
-                  <span>Criado em {new Date(loja.createdAt).toLocaleDateString('pt-BR')}</span>
-                  <span>Atualizado em {new Date(loja.updatedAt).toLocaleDateString('pt-BR')}</span>
+                  <span>Criado em {loja.createdAt ? new Date(loja.createdAt).toLocaleDateString('pt-BR') : 'N/A'}</span>
+                  <span>Atualizado em {loja.updatedAt ? new Date(loja.updatedAt).toLocaleDateString('pt-BR') : 'N/A'}</span>
                 </div>
               </div>
             </div>
