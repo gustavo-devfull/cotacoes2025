@@ -718,8 +718,8 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo e Título */}
             <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-200 to-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-[#0175a6]" />
               </div>
               <div className="min-w-0 flex items-center gap-3">
                 <h1 className="text-lg sm:text-xl font-light text-white truncate">
@@ -745,7 +745,7 @@ const Dashboard: React.FC = () => {
                   className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
                 >
                   <Camera className="w-4 h-4" />
-                  Imagens
+                  Upload Imagens
                 </button>
                 
                 <button
@@ -754,7 +754,7 @@ const Dashboard: React.FC = () => {
                   disabled={isLoading || filteredData.length === 0}
                 >
                   <Edit3 className="w-4 h-4" />
-                  Editar
+                  Excluir Produtos
                 </button>
 
                 <button
@@ -951,6 +951,7 @@ const Dashboard: React.FC = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
+                 Atualizar tabela
               </button>
               <button
                 onClick={() => {
@@ -962,6 +963,7 @@ const Dashboard: React.FC = () => {
                 className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
                 title="Ir para tabela de produtos"
               >
+                Descer para tabela
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -1073,11 +1075,14 @@ const Dashboard: React.FC = () => {
       )}
       
       {/* Rodapé */}
-      <footer className="bg-gray-50 border-t border-gray-200 py-4 px-6">
+      <footer className="bg-gray-50 border-t border-gray-200 py-4 px-16">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">
-              Sistema de Gerenciamento de Cotações
+              Sistema de Gerenciamento de Cotações | Ravi
+            </div>
+            <div className="text-sm text-gray-600">
+             Developed by: Gustavo Santos
             </div>
             <div className="text-sm text-gray-600">
               Última atualização: {formatDateTimeToBrazilian(new Date().toISOString())}

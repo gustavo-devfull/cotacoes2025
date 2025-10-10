@@ -79,7 +79,7 @@ const App: React.FC = () => {
               <img 
                 src={RaviLogo} 
                 alt="RAVI Logo" 
-                className="h-24 w-auto"
+                className="h-48 w-auto"
               />
             </div>
             <h2 className="text-3xl font-light text-white mb-2">

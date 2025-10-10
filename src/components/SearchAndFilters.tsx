@@ -122,7 +122,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Buscar por NUM COTAÇÃO, REF, DESCRIPTION..."
+                placeholder="Buscar por qualquer informação"
                 className="input-field pl-10"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -131,7 +131,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
           </div>
 
           {/* Filtro por Loja */}
-          <div className="lg:w-48">
+          <div className="lg:w-68">
             <select
               className="input-field"
               value={filters.shopFilter}
@@ -140,7 +140,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
                 setFilters(newFilters);
               }}
             >
-              <option value="">Todas as Lojas</option>
+              <option value="">Todas as Lojas/Fábricas</option>
               {uniqueShops.map(shop => (
                 <option key={shop} value={shop}>{shop}</option>
               ))}
@@ -148,7 +148,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({ data, onFilterChang
           </div>
 
           {/* Filtro por Segmento */}
-          <div className="lg:w-48">
+          <div className="lg:w-68">
             <select
               className="input-field"
               value={filters.segmentoFilter}
