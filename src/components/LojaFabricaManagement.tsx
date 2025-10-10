@@ -5,6 +5,7 @@ import { LojaFabricaService } from '../services/lojaFabricaService';
 import { getCotacoes, convertToCotacaoItem, CotacaoDocument } from '../services/cotacaoService';
 import { ftpImageService } from '../services/ftpImageService';
 import { useLightbox } from '../hooks/useLightbox';
+import Lightbox from './Lightbox';
 import { mockData } from '../data/mockData';
 
 // Componente para exibir imagem do produto (150px)
@@ -637,6 +638,16 @@ const LojaFabricaManagement: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Lightbox */}
+      <Lightbox
+        isOpen={lightbox.isOpen}
+        onClose={lightbox.closeLightbox}
+        images={lightbox.images}
+        currentIndex={lightbox.currentIndex}
+        onNavigate={lightbox.navigateTo}
+        title={lightbox.title}
+      />
     </div>
   );
 };
