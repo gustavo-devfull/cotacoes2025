@@ -719,7 +719,7 @@ const Dashboard: React.FC = () => {
     setIsExportingBaseProdutos(true);
     
     try {
-      // Converter dados para base de produtos
+      // Usar TODOS os dados disponíveis, não apenas os selecionados
       const baseProdutos = convertCotacoesToBaseProdutos(allData);
       
       // Remover duplicatas baseado na referência e fabrica
@@ -735,7 +735,7 @@ const Dashboard: React.FC = () => {
         includeHeaders: true
       });
 
-      showSuccess('Base de Produtos Exportada', `${sortedBaseProdutos.length} produtos únicos exportados com sucesso!`);
+      showSuccess('Base de Produtos Exportada', `${sortedBaseProdutos.length} produtos únicos de ${allData.length} produtos totais exportados com sucesso!`);
     } catch (error) {
       console.error('Erro ao exportar base de produtos:', error);
       showError('Erro na Exportação', 'Erro ao exportar base de produtos. Verifique o console para mais detalhes.');
