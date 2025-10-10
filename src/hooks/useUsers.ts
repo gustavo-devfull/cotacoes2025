@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { userService, User } from '../services/userService';
+
 // Cache global para usuários
 let usersCache: User[] | null = null;
 let usersCacheTimestamp: number = 0;

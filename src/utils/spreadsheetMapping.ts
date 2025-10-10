@@ -107,7 +107,7 @@ export const FIELD_MAPPING: FieldMapping[] = [
     spreadsheetField: 'UNIT',
     systemField: 'unit',
     required: true,
-    transform: (value: any) => (value && typeof value === 'string') ? value.trim() : '' || 'PC'
+    transform: (value: any) => (value && typeof value === 'string') ? value.trim() || 'PC' : 'PC'
   },
   {
     spreadsheetField: 'AMOUNT',
