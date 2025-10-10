@@ -6,6 +6,7 @@ import { getCotacoes, convertToCotacaoItem, CotacaoDocument } from '../services/
 import { ftpImageService } from '../services/ftpImageService';
 import { useLightbox } from '../hooks/useLightbox';
 import { useExportedProducts } from '../contexts/ExportedProductsContext';
+import { useProdutosExportadosPorFabrica } from '../contexts/ProdutosExportadosPorFabricaContext';
 import Lightbox from './Lightbox';
 import { mockData } from '../data/mockData';
 
@@ -141,6 +142,7 @@ const LojaFabricaManagement: React.FC = () => {
   // Hook do lightbox
   const lightbox = useLightbox();
   const { exportedProducts } = useExportedProducts();
+  const { contadoresPorFabrica, carregarContadoresPorFabricas } = useProdutosExportadosPorFabrica();
 
   // Carregar dados reais das cotações
   useEffect(() => {
@@ -184,6 +186,14 @@ const LojaFabricaManagement: React.FC = () => {
 
     loadData();
   }, []);
+
+  // Carregar contadores por fábrica quando as lojas forem carregadas
+  useEffect(() => {
+    if (lojas.length > 0) {
+      const fabricaIds = lojas.map(loja => loja.id);
+      carregarContadoresPorFabricas(fabricaIds);
+    }
+  }, [lojas, carregarContadoresPorFabricas]);
 
   const filteredLojas = LojaFabricaService.filterLojas(lojas, {
     searchTerm,
@@ -386,7 +396,7 @@ const LojaFabricaManagement: React.FC = () => {
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredLojas.map((loja) => {
-          const stats = LojaFabricaService.getLojaStats(loja.id, cotacoes, exportedProducts);
+          const stats = LojaFabricaService.getLojaStats(loja.id, cotacoes, exportedProducts, contadoresPorFabrica);
           return (
             <div key={loja.id} className="card hover:shadow-lg transition-shadow duration-200 p-6">
               {/* Card Header */}

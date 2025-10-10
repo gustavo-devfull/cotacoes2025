@@ -15,6 +15,7 @@ import { useAlertModal } from '../hooks/useAlertModal';
 import { useUsers } from '../contexts/UsersContext';
 import { useExportedProducts } from '../contexts/ExportedProductsContext';
 import { useProdutosJaExportados } from '../contexts/ProdutosJaExportadosContext';
+import { useProdutosExportadosPorFabrica } from '../contexts/ProdutosExportadosPorFabricaContext';
 import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare, FileSpreadsheet } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { sortData, getNextSortDirection } from '../utils/sortUtils';
@@ -50,6 +51,7 @@ const Dashboard: React.FC = () => {
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const { exportedProducts, setExportedProducts, addExportedProducts } = useExportedProducts();
   const { totalExportados, adicionarProdutos } = useProdutosJaExportados();
+  const { adicionarProdutosParaFabricas } = useProdutosExportadosPorFabrica();
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingBaseProdutos, setIsExportingBaseProdutos] = useState(false);
   const [showOnlyExported, setShowOnlyExported] = useState(false);
@@ -671,6 +673,22 @@ const Dashboard: React.FC = () => {
       
       // Adicionar ao contador total de produtos já exportados
       await adicionarProdutos(selectedData.length);
+      
+      // Adicionar produtos aos contadores por fábrica
+      const produtosPorFabrica = new Map<string, { nome: string; quantidade: number }>();
+      selectedData.forEach(item => {
+        const fabricaId = `${item.SHOP_NO}-${item.nomeContato}-${item.telefoneContato}`;
+        const fabricaNome = item.SHOP_NO;
+        
+        if (produtosPorFabrica.has(fabricaId)) {
+          const current = produtosPorFabrica.get(fabricaId)!;
+          current.quantidade += 1;
+        } else {
+          produtosPorFabrica.set(fabricaId, { nome: fabricaNome, quantidade: 1 });
+        }
+      });
+      
+      await adicionarProdutosParaFabricas(produtosPorFabrica);
       
       setSelectedProducts(new Set<string>());
 

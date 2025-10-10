@@ -3,6 +3,7 @@ import { useUser } from '../contexts/UserContext';
 import { UsersProvider } from '../contexts/UsersContext';
 import { ExportedProductsProvider } from '../contexts/ExportedProductsContext';
 import { ProdutosJaExportadosProvider } from '../contexts/ProdutosJaExportadosContext';
+import { ProdutosExportadosPorFabricaProvider } from '../contexts/ProdutosExportadosPorFabricaContext';
 import Navigation from './Navigation';
 import Dashboard from './Dashboard';
 import UserProfile from './UserProfile';
@@ -105,14 +106,16 @@ const App: React.FC = () => {
       <UsersProvider>
         <ExportedProductsProvider>
           <ProdutosJaExportadosProvider>
-            <div className="min-h-screen bg-gray-50">
-              <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
-              <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                <div className="px-4 py-6 sm:px-0">
-                  {renderPage()}
-                </div>
-              </main>
-            </div>
+            <ProdutosExportadosPorFabricaProvider>
+              <div className="min-h-screen bg-gray-50">
+                <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+                <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                  <div className="px-4 py-6 sm:px-0">
+                    {renderPage()}
+                  </div>
+                </main>
+              </div>
+            </ProdutosExportadosPorFabricaProvider>
           </ProdutosJaExportadosProvider>
         </ExportedProductsProvider>
       </UsersProvider>

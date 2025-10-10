@@ -37,6 +37,11 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
     
+    // Regras para produtos exportados por fábrica - permitir leitura e escrita para usuários autenticados
+    match /produtosExportadosPorFabrica/{documentId} {
+      allow read, write: if request.auth != null;
+    }
+    
     // Regras padrão - negar acesso para documentos não especificados
     match /{document=**} {
       allow read, write: if false;

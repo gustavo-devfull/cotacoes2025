@@ -1,5 +1,6 @@
 import { CotacaoItem, LojaFabrica } from '../types';
 import { updateCotacao, CotacaoDocument } from './cotacaoService';
+import { ProdutosExportadosPorFabricaService } from './produtosExportadosPorFabricaService';
 
 // Serviço para gerenciar dados de Lojas/Fábricas extraídos das cotações
 export class LojaFabricaService {
@@ -42,7 +43,7 @@ export class LojaFabricaService {
   }
   
   // Obter estatísticas de uma loja específica
-  static getLojaStats(lojaId: string, cotacoes: CotacaoItem[], exportedProducts?: Set<string>) {
+  static getLojaStats(lojaId: string, cotacoes: CotacaoItem[], exportedProducts?: Set<string>, contadoresPorFabrica?: Map<string, number>) {
     const lojaCotacoes = cotacoes.filter(cotacao => 
       `${cotacao.SHOP_NO}-${cotacao.nomeContato}-${cotacao.telefoneContato}` === lojaId
     );
@@ -56,9 +57,15 @@ export class LojaFabricaService {
       }).length;
     }
     
+    // Usar contador total por fábrica se disponível
+    let totalProdutosExportados = produtosExportados;
+    if (contadoresPorFabrica && contadoresPorFabrica.has(lojaId)) {
+      totalProdutosExportados = contadoresPorFabrica.get(lojaId) || 0;
+    }
+    
     return {
       totalCotacoes: lojaCotacoes.length,
-      totalItens: exportedProducts ? produtosExportados : lojaCotacoes.reduce((sum, cotacao) => sum + cotacao.qty, 0),
+      totalItens: totalProdutosExportados,
       valorTotal: lojaCotacoes.reduce((sum, cotacao) => sum + cotacao.amount, 0),
       cbmTotal: lojaCotacoes.reduce((sum, cotacao) => sum + cotacao.cbm_total, 0),
       ultimaCotacao: lojaCotacoes.length > 0 ? 
