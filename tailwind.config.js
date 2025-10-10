@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'funnel': ['Funnel Display', 'sans-serif'],
+        'redhat': ['"Red Hat Display"', 'sans-serif'],
       },
       colors: {
         primary: {
