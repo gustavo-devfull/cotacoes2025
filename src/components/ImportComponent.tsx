@@ -456,54 +456,46 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                 </div>
               </div>
 
-              {/* Campo Data da Cotação */}
-              <div className="mb-6">
-                <label htmlFor="dataCotacao" className="block text-sm font-medium text-gray-700 mb-2">
-                  Data da Cotação <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="dataCotacao"
-                  type="date"
-                  value={dataCotacao}
-                  onChange={(e) => {
-                    setDataCotacao(e.target.value);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  required
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                  Esta data será usada como NUM_COTACAO para todos os itens importados
-                </p>
-              </div>
+              {/* Campos Data da Cotação e Segmento na mesma linha */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Campo Data da Cotação */}
+                <div>
+                  <label htmlFor="dataCotacao" className="block text-sm font-medium text-gray-700 mb-2">
+                    Data da Cotação <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="dataCotacao"
+                    type="date"
+                    value={dataCotacao}
+                    onChange={(e) => {
+                      setDataCotacao(e.target.value);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Esta data será usada como NUM_COTACAO para todos os itens importados
+                  </p>
+                </div>
 
-              {/* Campo Segmento */}
-              <div className="mb-6">
-                <label htmlFor="segmento" className="block text-sm font-medium text-gray-700 mb-2">
-                  Segmento <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="segmento"
-                  type="text"
-                  value={segmento}
-                  onChange={(e) => setSegmento(e.target.value)}
-                  placeholder="Digite o segmento"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  required
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                  Este segmento será aplicado a todos os itens importados desta planilha
-                </p>
-              </div>
-
-              {/* Download Template */}
-              <div className="mb-6">
-                <button
-                  onClick={downloadTemplate}
-                  className="btn-secondary flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Baixar Template CSV
-                </button>
+                {/* Campo Segmento */}
+                <div>
+                  <label htmlFor="segmento" className="block text-sm font-medium text-gray-700 mb-2">
+                    Segmento <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="segmento"
+                    type="text"
+                    value={segmento}
+                    onChange={(e) => setSegmento(e.target.value)}
+                    placeholder="Digite o segmento"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Este segmento será aplicado a todos os itens importados desta planilha
+                  </p>
+                </div>
               </div>
 
               {/* Área de Upload */}
@@ -544,6 +536,17 @@ const ImportComponent: React.FC<ImportComponentProps> = ({ onImportComplete, onC
                     />
                   </>
                 )}
+              </div>
+
+              {/* Download Template - Movido para abaixo da área de upload */}
+              <div className="mt-6 text-center">
+                <button
+                  onClick={downloadTemplate}
+                  className="btn-secondary flex items-center gap-2 mx-auto"
+                >
+                  <Download className="w-4 h-4" />
+                  Baixar Template CSV
+                </button>
               </div>
             </>
           ) : (
