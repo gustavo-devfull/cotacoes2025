@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, Tag, BarChart3, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Building2, Phone, Calendar, BarChart3, Package, DollarSign, TrendingUp } from 'lucide-react';
 import { LojaFabrica, CotacaoItem } from '../types';
 import { LojaFabricaService } from '../services/lojaFabricaService';
 import { getCotacoes, convertToCotacaoItem, CotacaoDocument } from '../services/cotacaoService';
