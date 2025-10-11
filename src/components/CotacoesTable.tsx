@@ -343,7 +343,7 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
   }
 
   return (
-    <div className="card overflow-hidden w-[1400px] mx-auto">
+    <div className="card overflow-hidden w-[1400px] -mx-[130px]">
       {/* Botões de scroll horizontal */}
       <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-200">
         <div className="flex items-center gap-2">

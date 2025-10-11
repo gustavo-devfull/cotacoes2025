@@ -781,15 +781,15 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header 
-        className="shadow-sm border-b border-gray-200 p-4 rounded-2xl"
-        style={{ backgroundColor: '#0175a6' }}
+        className="shadow-sm border-b border-gray-200 p-2 rounded-xl"
+        style={{ backgroundColor: '#0175a6af' }}
       >
-        <div className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1216px] mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo e Título */}
             <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-200 to-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-[#0175a6]" />
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-primary-200 to-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="w-4 h-4 sm:w-4 sm:h-4 text-[#0175a6]" />
               </div>
               <div className="min-w-0 flex items-center gap-3">
                 <h1 className="text-lg sm:text-xl font-light text-white truncate">
@@ -803,7 +803,7 @@ const Dashboard: React.FC = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="btn-primary flex items-center gap-2 px-3 py-1.5 text-sm"
+                  className="btn-primary bg-[#0175a6] flex items-center gap-2 px-3 py-1.5 text-sm"
                   disabled={isLoading}
                 >
                   <Upload className="w-4 h-4" />
@@ -838,7 +838,7 @@ const Dashboard: React.FC = () => {
 
                 <button
                   onClick={handleExportBaseProdutos}
-                  className="btn-primary flex items-center gap-2 px-3 py-1.5 text-sm"
+                  className="btn-primary bg-[#02618a] flex items-center gap-2 px-3 py-1.5 text-sm"
                   disabled={isExportingBaseProdutos || allData.length === 0 || exportedProducts.size === 0}
                 >
                   <FileSpreadsheet className="w-4 h-4" />
@@ -927,173 +927,154 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         )}
-      </main>
 
-      {/* Tabela de Cotações - Fora do container principal para centralização perfeita */}
-      <div className="mb-2 h-[calc(100%+150px)]">
-        <div className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Controles de Seleção */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4" />
-                  Seleção de Produtos
-                </h3>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span>{selectedProducts.size} selecionados</span>
-                  <span className="text-gray-400">•</span>
-                  <span>{exportedProducts.size} exportados</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={selectAllProducts}
-                  className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
-                  disabled={filteredData.length === 0}
-                >
-                  Selecionar Todos
-                </button>
-                <button
-                  onClick={() => setShowOnlyExported(!showOnlyExported)}
-                  className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                    showOnlyExported 
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                  }`}
-                  disabled={exportedProducts.size === 0}
-                >
-                  {showOnlyExported ? 'Mostrar Todos' : 'Apenas Exportados'}
-                </button>
-                <button
-                  onClick={deselectAllProducts}
-                  className="px-3 py-1.5 text-xs bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
-                  disabled={selectedProducts.size === 0}
-                >
-                  Desmarcar Todos
-                </button>
-                <button
-                  onClick={async () => {
-                    showWarning('Confirmar Limpeza', 'Tem certeza que deseja limpar todos os estados de seleção e exportação?', { autoClose: false });
-                    // Aqui você pode implementar uma confirmação customizada se necessário
-                    // Por enquanto, vamos manter a funcionalidade direta
-                    setSelectedProducts(new Set());
-                    setExportedProducts(new Set());
-                    if (currentUser?.id) {
-                      try {
-                        await productSelectionService.clearSelectionState(currentUser.id);
-                        showSuccess('Estados Limpos', 'Estados limpos com sucesso!');
-                      } catch (error) {
-                        console.error('Erro ao limpar estados:', error);
-                      }
-                    }
-                  }}
-                  className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors"
-                  disabled={selectedProducts.size === 0 && exportedProducts.size === 0}
-                >
-                  Limpar Tudo
-                </button>
-                <button
-                  onClick={async () => {
-                    try {
-                      const deletedCount = await notificationsService.deleteAllNotifications();
-                      if (deletedCount > 0) {
-                        showSuccess('Notificações Zeradas', `${deletedCount} notificação(ões) excluída(s) com sucesso!`);
-                      } else {
-                        showInfo('Nenhuma Notificação', 'Não há notificações para excluir.');
-                      }
-                    } catch (error) {
-                      console.error('Erro ao zerar notificações:', error);
-                      showError('Erro ao Zerar', 'Erro ao excluir notificações. Verifique o console para mais detalhes.');
-                    }
-                  }}
-                  className="px-3 py-1.5 text-xs bg-orange-50 text-orange-700 rounded-md hover:bg-orange-100 transition-colors"
-                  title="Excluir todas as notificações do sistema"
-                >
-                  Zerar Notificações
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-light text-gray-900 flex items-center gap-2">
-                <Package className="w-6 h-6 text-primary-600" />
-                Cotações ({filteredData.length} itens)
-              </h2>
-              <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
-                <span className="text-blue-700 font-medium">ProdutosJaExportados:</span>
-                <span className="text-blue-800 font-semibold">{totalExportados}</span>
-              </div>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
-                title="Atualizar tabela de produtos"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                 Atualizar tabela
-              </button>
-              <button
-                onClick={() => {
-                  const tableElement = document.querySelector('.cotacoes-table');
-                  if (tableElement) {
-                    tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
-                }}
-                className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
-                title="Ir para tabela de produtos"
-              >
-                Descer para tabela
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
-            
-            {filteredData.length !== allData.length && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <TrendingUp className="w-5 h-5" />
-                <span>
-                  Mostrando {filteredData.length} de {allData.length} itens
-                </span>
-              </div>
-            )}
-          </div>
-          
-          {/* Busca e Filtros */}
-          <SearchAndFilters 
-            data={allData} 
-            onFilterChange={handleFilterChange} 
+        {/* Tabela de Cotações */}
+        <div className="cotacoes-table mb-6">
+          <CotacoesTable
+            data={filteredData}
+            onUpdateItem={handleUpdateItem}
+            onDeleteItem={handleDeleteItem}
+            isLoading={isLoading}
+            comments={comments}
+            currentUser={currentUser}
+            onAddComment={handleAddComment}
+            lightbox={lightbox}
+            sortOptions={sortOptions}
+            onSort={handleSort}
+            selectedProducts={selectedProducts}
+            exportedProducts={exportedProducts}
+            onToggleProductSelection={toggleProductSelection}
+            availableUsers={availableUsers.map(user => ({
+              id: user.id,
+              name: user.name,
+              email: user.email
+            }))}
+            usersLoading={usersLoading}
           />
         </div>
-        
-        <div className="cotacoes-table">
-            <CotacoesTable
-              data={filteredData}
-              onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem}
-              isLoading={isLoading}
-              comments={comments}
-              currentUser={currentUser}
-              onAddComment={handleAddComment}
-              lightbox={lightbox}
-              sortOptions={sortOptions}
-              onSort={handleSort}
-              selectedProducts={selectedProducts}
-              exportedProducts={exportedProducts}
-              onToggleProductSelection={toggleProductSelection}
-              availableUsers={availableUsers.map(user => ({
-                id: user.id,
-                name: user.name,
-                email: user.email
-              }))}
-              usersLoading={usersLoading}
-            />
+        {/* Busca e Filtros */}
+        <SearchAndFilters 
+          data={allData} 
+          onFilterChange={handleFilterChange} 
+        />
+        {/* Controles de Seleção */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <CheckSquare className="w-4 h-4" />
+                Seleção de Produtos
+              </h3>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>{selectedProducts.size} selecionados</span>
+                <span className="text-gray-400">•</span>
+                <span>{exportedProducts.size} exportados</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={selectAllProducts}
+                className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
+                disabled={filteredData.length === 0}
+              >
+                Selecionar Todos
+              </button>
+              <button
+                onClick={() => setShowOnlyExported(!showOnlyExported)}
+                className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                  showOnlyExported 
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+                disabled={exportedProducts.size === 0}
+              >
+                {showOnlyExported ? 'Mostrar Todos' : 'Apenas Exportados'}
+              </button>
+              <button
+                onClick={deselectAllProducts}
+                className="px-3 py-1.5 text-xs bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+                disabled={selectedProducts.size === 0}
+              >
+                Desmarcar Todos
+              </button>
+              <button
+                onClick={async () => {
+                  showWarning('Confirmar Limpeza', 'Tem certeza que deseja limpar todos os estados de seleção e exportação?', { autoClose: false });
+                  // Aqui você pode implementar uma confirmação customizada se necessário
+                  // Por enquanto, vamos manter a funcionalidade direta
+                  setSelectedProducts(new Set());
+                  setExportedProducts(new Set());
+                  if (currentUser?.id) {
+                    try {
+                      await productSelectionService.clearSelectionState(currentUser.id);
+                      showSuccess('Estados Limpos', 'Estados limpos com sucesso!');
+                    } catch (error) {
+                      console.error('Erro ao limpar estados:', error);
+                    }
+                  }
+                }}
+                className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors"
+                disabled={selectedProducts.size === 0 && exportedProducts.size === 0}
+              >
+                Limpar Tudo
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const deletedCount = await notificationsService.deleteAllNotifications();
+                    if (deletedCount > 0) {
+                      showSuccess('Notificações Zeradas', `${deletedCount} notificação(ões) excluída(s) com sucesso!`);
+                    } else {
+                      showInfo('Nenhuma Notificação', 'Não há notificações para excluir.');
+                    }
+                  } catch (error) {
+                    console.error('Erro ao zerar notificações:', error);
+                    showError('Erro ao Zerar', 'Erro ao excluir notificações. Verifique o console para mais detalhes.');
+                  }
+                }}
+                className="px-3 py-1.5 text-xs bg-orange-50 text-orange-700 rounded-md hover:bg-orange-100 transition-colors"
+                title="Excluir todas as notificações do sistema"
+              >
+                Zerar Notificações
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-light text-gray-900 flex items-center gap-2">
+              <Package className="w-6 h-6 text-primary-600" />
+              Cotações ({filteredData.length} itens)
+            </h2>
+            <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
+              <span className="text-blue-700 font-medium">ProdutosJaExportados:</span>
+              <span className="text-blue-800 font-semibold">{totalExportados}</span>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
+              title="Atualizar tabela de produtos"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+               Atualizar
+            </button>
+          </div>
+          
+          {filteredData.length !== allData.length && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <TrendingUp className="w-5 h-5" />
+              <span>
+                Mostrando {filteredData.length} de {allData.length} itens
+              </span>
+            </div>
+          )}
+        </div>
+        
+
+      </main>
 
       {/* Modal de Importação */}
       {showImportModal && (
