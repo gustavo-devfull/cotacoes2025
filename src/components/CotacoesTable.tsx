@@ -345,11 +345,11 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
   return (
     <div className="card overflow-hidden w-[1400px] -mx-[130px]">
       {/* Botões de scroll horizontal */}
-      <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-200">
-        <div className="flex items-center gap-2">
+      <div className="flex justify-center items-center p-4 bg-gray-50 border-b border-gray-200 relative">
+        <div className="flex items-center gap-3">
           <button
             onClick={scrollToStart}
-            className="btn-scroll flex items-center gap-2 text-sm"
+            className="flex items-center justify-center w-[120px] h-[40px] gap-2 text-sm font-medium text-[#0175a6] bg-[#e6f3ff] hover:bg-[#cce7ff] border border-[#b3d9ff] rounded-lg transition-colors duration-200"
             title="Rolar para a primeira coluna"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -357,27 +357,26 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
           </button>
           <button
             onClick={scrollToPhoto}
-            className="btn-scroll flex items-center gap-2 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100"
+            className="flex items-center justify-center w-[120px] h-[40px] gap-2 text-sm font-medium text-white bg-[#0175a6] hover:bg-[#015a8a] border border-[#0175a6] rounded-lg transition-colors duration-200"
             title="Rolar para as colunas Valores"
           >
-            
             Preço
           </button>
           <button
             onClick={scrollToEnd}
-            className="btn-scroll flex items-center gap-2 text-sm"
+            className="flex items-center justify-center w-[120px] h-[40px] gap-2 text-sm font-medium text-[#0175a6] bg-[#e6f3ff] hover:bg-[#cce7ff] border border-[#b3d9ff] rounded-lg transition-colors duration-200"
             title="Rolar para a última coluna"
           >
             Fim
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className="text-sm text-gray-600">
+        <div className="absolute right-4 text-sm text-gray-600">
           {data.length} produto{data.length !== 1 ? 's' : ''}
         </div>
       </div>
       
-      <div ref={scrollContainerRef} className="overflow-x-auto max-h-[600px] overflow-y-auto">
+      <div ref={scrollContainerRef} className="overflow-x-auto max-h-[550px] overflow-y-auto">
         <table className="w-full table-fixed">
           <thead className="table-header sticky top-0 z-40 bg-grey-300 shadow-sm">
             <tr>

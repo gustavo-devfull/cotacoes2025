@@ -122,14 +122,14 @@ const Lightbox: React.FC<LightboxProps> = ({
 
         {/* Contador de imagens */}
         {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-xs">
             {currentIndex + 1} / {images.length}
           </div>
         )}
 
         {/* Título */}
         {title && (
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-8 py-2 rounded-lg text-base max-w-md text-center uppercase">
+          <div className="absolute bottom-[-20px] left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg text-xs max-w-md text-center uppercase">
             {title}
           </div>
         )}
