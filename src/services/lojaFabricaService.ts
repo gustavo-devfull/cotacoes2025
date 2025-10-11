@@ -1,6 +1,5 @@
 import { CotacaoItem, LojaFabrica } from '../types';
 import { updateCotacao, CotacaoDocument } from './cotacaoService';
-import { ProdutosExportadosPorFabricaService } from './produtosExportadosPorFabricaService';
 
 // Serviço para gerenciar dados de Lojas/Fábricas extraídos das cotações
 export class LojaFabricaService {

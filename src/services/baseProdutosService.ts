@@ -58,18 +58,18 @@ export const convertToBaseProduto = (cotacaoItem: CotacaoItem): BaseProdutoItem 
     gw: Number(cotacaoItem.gw) || 0,
     nw: Number(cotacaoItem.nw) || 0,
     pesoUnitario: Number(cotacaoItem.pesoUnitario) || 0,
-    marca: cotacaoItem.marca || '',
-    codRavi: cotacaoItem.codRavi || '',
-    ean: cotacaoItem.ean || '',
-    dun: cotacaoItem.dun || '',
-    nomeInvoiceEn: cotacaoItem['English Description'] || '',
-    nomeDiNb: cotacaoItem.nomeDiNb || '',
-    nomeRaviProfit: cotacaoItem.nomeRaviProfit || '',
-    qtMinVenda: Number(cotacaoItem.qtMinVenda) || 0,
-    ncm: cotacaoItem.NCM || '',
-    cest: cotacaoItem.cest || '',
-    valorInvoiceUsd: Number(cotacaoItem.valorInvoiceUsd) || 0,
-    obsPedido: cotacaoItem.obsPedido || ''
+    marca: '', // Campo não disponível na interface atual
+    codRavi: '', // Campo não disponível na interface atual
+    ean: '', // Campo não disponível na interface atual
+    dun: '', // Campo não disponível na interface atual
+    nomeInvoiceEn: cotacaoItem.engdesciption || '',
+    nomeDiNb: '', // Campo não disponível na interface atual
+    nomeRaviProfit: '', // Campo não disponível na interface atual
+    qtMinVenda: 0, // Campo não disponível na interface atual
+    ncm: cotacaoItem.ncm || '',
+    cest: '', // Campo não disponível na interface atual
+    valorInvoiceUsd: 0, // Campo não disponível na interface atual
+    obsPedido: '' // Campo não disponível na interface atual
   };
 };
 
