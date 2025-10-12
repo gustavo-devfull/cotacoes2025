@@ -344,7 +344,7 @@ const LojaFabricaManagement: React.FC = () => {
           <select
             value={segmentoFilter}
             onChange={(e) => setSegmentoFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent w-[200px]"
           >
             <option value="">Todos os segmentos</option>
             {segmentosUnicos.map(segmento => (
@@ -398,12 +398,12 @@ const LojaFabricaManagement: React.FC = () => {
         {filteredLojas.map((loja) => {
           const stats = LojaFabricaService.getLojaStats(loja.id, cotacoes, exportedProducts, contadoresPorFabrica);
           return (
-            <div key={loja.id} className="card hover:shadow-lg transition-shadow duration-200 p-6">
+            <div key={loja.id} className="card shadow-xl shadow-gray-300 hover:shadow-lg transition-shadow duration-200 p-6">
               {/* Card Header */}
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-4 bg-[#0175a61a] p-4 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-primary-600" />
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-[#0175a6]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{loja.nome}</h3>

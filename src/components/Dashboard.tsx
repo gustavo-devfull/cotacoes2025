@@ -833,7 +833,7 @@ const Dashboard: React.FC = () => {
                   disabled={isExporting || selectedProducts.size === 0}
                 >
                   <Download className="w-4 h-4" />
-                  {isExporting ? 'Exportando...' : `Exportar (${selectedProducts.size})`}
+                  {isExporting ? 'Exportando...' : `Marcar para a Base (${selectedProducts.size})`}
                 </button>
 
                 <button

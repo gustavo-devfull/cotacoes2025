@@ -104,10 +104,10 @@ const UserProfile: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="card p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Usuário não encontrado</h3>
-        <p className="text-gray-600">Faça login para acessar seu perfil</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-gray-500 text-lg">
+          Faça login para acessar seu perfil
+        </p>
       </div>
     );
   }
@@ -153,148 +153,132 @@ const UserProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Informações da Conta */}
-      <div className="card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <User className="w-5 h-5 text-blue-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Informações da Conta</h2>
+      {/* Informações da Conta e Editar Perfil */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Informações da Conta */}
+        <div className="card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <User className="w-5 h-5 text-blue-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Informações da Conta</h2>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Data de Criação
+              </label>
+              <p className="text-gray-900">{formatDate(currentUser.createdAt)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Último Login
+              </label>
+              <p className="text-gray-900">{formatDate(currentUser.lastLogin)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ID do Usuário
+              </label>
+              <p className="text-gray-900 font-mono text-sm">{currentUser.id}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email Verificado
+              </label>
+              <div className="flex items-center gap-2">
+                {firebaseUser?.emailVerified ? (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-yellow-500" />
+                )}
+                <span className={firebaseUser?.emailVerified ? 'text-green-600' : 'text-yellow-600'}>
+                  {firebaseUser?.emailVerified ? 'Verificado' : 'Não verificado'}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data de Criação
-            </label>
-            <p className="text-gray-900">{formatDate(currentUser.createdAt)}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Último Login
-            </label>
-            <p className="text-gray-900">{formatDate(currentUser.lastLogin)}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              ID do Usuário
-            </label>
-            <p className="text-gray-900 font-mono text-sm">{currentUser.id}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email Verificado
-            </label>
+        {/* Editar Perfil */}
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              {firebaseUser?.emailVerified ? (
-                <CheckCircle className="w-4 h-4 text-green-500" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-yellow-500" />
+              <Settings className="w-5 h-5 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Editar Perfil</h2>
+            </div>
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+            >
+              {isEditing ? 'Cancelar' : 'Editar'}
+            </button>
+          </div>
+
+          {isEditing ? (
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
               )}
-              <span className={firebaseUser?.emailVerified ? 'text-green-600' : 'text-yellow-600'}>
-                {firebaseUser?.emailVerified ? 'Verificado' : 'Não verificado'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+              {success && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-600">{success}</p>
+                </div>
+              )}
 
-      {/* Editar Perfil */}
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Editar Perfil</h2>
-          </div>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-          >
-            {isEditing ? 'Cancelar' : 'Editar'}
-          </button>
-        </div>
-
-        {isEditing ? (
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome Completo
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
               </div>
-            )}
-            {success && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-600">{success}</p>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
               </div>
-            )}
 
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Nome Completo
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200"
-              >
-                Cancelar
-              </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Salvar
+                    Salvar Alterações
                   </>
                 )}
               </button>
+            </form>
+          ) : (
+            <div className="text-center text-gray-500 py-8">
+              <Settings className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>Clique em "Editar" para modificar suas informações</p>
             </div>
-          </form>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome Completo
-              </label>
-              <p className="text-gray-900">{currentUser.name}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <p className="text-gray-900">{currentUser.email}</p>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Alterar Senha */}
@@ -391,4 +375,3 @@ const UserProfile: React.FC = () => {
 };
 
 export default UserProfile;
-

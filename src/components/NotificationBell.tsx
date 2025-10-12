@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, MessageCircle, Package, Clock, Check, CheckCheck } from 'lucide-react';
+import { Bell, X, MessageCircle, Package, Clock, Check, CheckCheck, Filter } from 'lucide-react';
 import { Notification } from '../types';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { useUsers } from '../contexts/UsersContext';
+import { useUser } from '../contexts/UserContext';
 
 interface NotificationBellProps {
   notifications: Notification[];
@@ -20,9 +21,12 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
   onFilterByRef
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showOnlyMyComments, setShowOnlyMyComments] = useState(false);
+  
   // Get users context with error handling
   const usersContext = useUsers();
   const { getUsersByIds } = usersContext;
+  const { currentUser } = useUser();
   const [mentionedUsersCache, setMentionedUsersCache] = useState<{[key: string]: string[]}>({});
 
   // Carregar nomes dos usuários marcados
@@ -79,6 +83,30 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
     return `${shopNo} - ${ref} - ${description.length > 30 ? description.substring(0, 30) + '...' : description}`;
   };
 
+  // Contar quantos comentários o usuário logado está marcado
+  const getMyCommentsCount = () => {
+    if (!currentUser) return 0;
+    return notifications.filter(notification => {
+      const { mentionedUsers } = notification.commentInfo;
+      return mentionedUsers && mentionedUsers.includes(currentUser.id);
+    }).length;
+  };
+
+  // Filtrar notificações para mostrar apenas as que o usuário logado está marcado
+  const getFilteredNotifications = () => {
+    if (!showOnlyMyComments || !currentUser) {
+      return notifications;
+    }
+    
+    return notifications.filter(notification => {
+      const { mentionedUsers } = notification.commentInfo;
+      return mentionedUsers && mentionedUsers.includes(currentUser.id);
+    });
+  };
+
+  const myCommentsCount = getMyCommentsCount();
+  const filteredNotifications = getFilteredNotifications();
+
   return (
     <div className="relative">
       {/* Bell Icon */}
@@ -104,7 +132,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
           />
           
           {/* Notification Panel */}
-          <div className="absolute right-0 mt-2 w-[28rem] max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden overflow-x-hidden">
+          <div className="absolute right-0 mt-2 w-[28rem] max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[500px] overflow-hidden overflow-x-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2">
@@ -135,15 +163,46 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
               </div>
             </div>
 
+            {/* Filter Controls */}
+            {currentUser && myCommentsCount > 0 && (
+              <div className="px-4 py-3 border-b border-gray-200 bg-blue-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">
+                      Você está marcado em {myCommentsCount} comentário{myCommentsCount !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowOnlyMyComments(!showOnlyMyComments)}
+                    className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded-md transition-colors ${
+                      showOnlyMyComments
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'
+                    }`}
+                    title={showOnlyMyComments ? 'Mostrar todas as notificações' : 'Mostrar apenas meus comentários'}
+                  >
+                    <Filter className="w-3 h-3" />
+                    {showOnlyMyComments ? 'Todas' : 'Apenas Meus'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Notifications List */}
             <div className="max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
+              {filteredNotifications.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
                   <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                  <p>Nenhuma notificação</p>
+                  <p>
+                    {showOnlyMyComments 
+                      ? 'Você não está marcado em nenhum comentário' 
+                      : 'Nenhuma notificação'
+                    }
+                  </p>
                 </div>
               ) : (
-                notifications.map((notification) => (
+                filteredNotifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150 ${
@@ -214,10 +273,20 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
             </div>
 
             {/* Footer */}
-            {notifications.length > 0 && (
+            {filteredNotifications.length > 0 && (
               <div className="p-3 border-t border-gray-200 bg-gray-50 text-center">
                 <p className="text-xs text-gray-500">
-                  {notifications.length} notificação{notifications.length !== 1 ? 'ões' : ''} total
+                  {showOnlyMyComments ? (
+                    <>
+                      {filteredNotifications.length} de {notifications.length} notificação{notifications.length !== 1 ? 'ões' : ''} 
+                      {myCommentsCount > 0 && ` (${myCommentsCount} onde você está marcado)`}
+                    </>
+                  ) : (
+                    <>
+                      {filteredNotifications.length} notificação{filteredNotifications.length !== 1 ? 'ões' : ''} total
+                      {myCommentsCount > 0 && ` (${myCommentsCount} onde você está marcado)`}
+                    </>
+                  )}
                 </p>
               </div>
             )}
