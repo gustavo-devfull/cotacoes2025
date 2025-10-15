@@ -142,12 +142,12 @@ const Dashboard: React.FC = () => {
           const localExported = localStorage.getItem(`exportedProducts_${currentUser.id}`);
           
           if (localSelected) {
-            states.selectedProducts = new Set(JSON.parse(localSelected));
+            states.selectedProducts = new Set<string>(JSON.parse(localSelected));
             console.log('📱 Estados carregados do localStorage (selecionados):', states.selectedProducts.size);
           }
           
           if (localExported) {
-            states.exportedProducts = new Set(JSON.parse(localExported));
+            states.exportedProducts = new Set<string>(JSON.parse(localExported));
             console.log('📱 Estados carregados do localStorage (exportados):', states.exportedProducts.size);
           }
         }
@@ -187,13 +187,13 @@ const Dashboard: React.FC = () => {
           const localExported = localStorage.getItem(`exportedProducts_${currentUser.id}`);
           
           if (localSelected) {
-            const selectedSet = new Set(JSON.parse(localSelected));
+            const selectedSet = new Set<string>(JSON.parse(localSelected));
             setSelectedProducts(selectedSet);
             console.log('📱 Estados carregados do localStorage (fallback):', selectedSet.size);
           }
           
           if (localExported) {
-            const exportedSet = new Set(JSON.parse(localExported));
+            const exportedSet = new Set<string>(JSON.parse(localExported));
             setExportedProducts(exportedSet);
             console.log('📱 Estados carregados do localStorage (fallback):', exportedSet.size);
           }
