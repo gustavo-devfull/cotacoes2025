@@ -392,7 +392,10 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               <SortableHeader field="referencia" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px] sticky left-[160px] z-50 bg-grey-300 border-r border-gray-200">
                 REF
               </SortableHeader>
-              <SortableHeader field="segmento" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
+              <SortableHeader field="OBSERVATIONS_EXTRA" sortOptions={sortOptions} onSort={onSort} className="text-left w-[210px] sticky left-[310px] z-50 bg-grey-300 border-r border-gray-200">
+                Comentários
+              </SortableHeader>
+              <SortableHeader field="segmento" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px] sticky left-[520px] z-50 bg-grey-300 border-r border-gray-200">
                 SEGMENTO
               </SortableHeader>
               <SortableHeader field="description" sortOptions={sortOptions} onSort={onSort} className="text-left w-[190px]">
@@ -451,9 +454,6 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
               </SortableHeader>
               <SortableHeader field="pesoUnitario" sortOptions={sortOptions} onSort={onSort} className="text-center w-[180px]">
                 PESO UNIT (kg)
-              </SortableHeader>
-              <SortableHeader field="OBSERVATIONS_EXTRA" sortOptions={sortOptions} onSort={onSort} className="text-left w-[210px]">
-                Comentários
               </SortableHeader>
               <SortableHeader field="nomeContato" sortOptions={sortOptions} onSort={onSort} className="text-left w-[150px]">
                 CONTATO
@@ -526,7 +526,23 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                     item.referencia
                   )}
                 </td>
-                <td className="table-cell border-r border-gray-200 w-[150px]">
+                
+                {/* Sistema de Comentários */}
+                <td className="table-cell border-r border-gray-200 w-[210px] sticky left-[310px] z-20 bg-white">
+                  <CommentsComponent
+                    productId={`${item.PHOTO_NO}-${item.referencia}`}
+                    comments={comments}
+                    currentUser={currentUser || { id: '', name: 'Usuário' }}
+                    onAddComment={onAddComment}
+                    onImageClick={(images, index, title) => {
+                      lightbox.openLightbox(images, index, title);
+                    }}
+                    availableUsers={availableUsers}
+                    usersLoading={usersLoading}
+                  />
+                </td>
+                
+                <td className="table-cell border-r border-gray-200 w-[150px] sticky left-[520px] z-20 bg-white">
                   {onUpdateItem ? (
                     <EditableCell 
                       value={item.segmento} 
@@ -731,21 +747,6 @@ const CotacoesTable: React.FC<CotacoesTableProps> = ({
                   ) : (
                     formatNumber(item.pesoUnitario, 2)
                   )}
-                </td>
-                
-                {/* Sistema de Comentários */}
-                <td className="table-cell border-r border-gray-200 w-[210px]">
-                  <CommentsComponent
-                    productId={`${item.PHOTO_NO}-${item.referencia}`}
-                    comments={comments}
-                    currentUser={currentUser || { id: '', name: 'Usuário' }}
-                    onAddComment={onAddComment}
-                    onImageClick={(images, index, title) => {
-                      lightbox.openLightbox(images, index, title);
-                    }}
-                    availableUsers={availableUsers}
-                    usersLoading={usersLoading}
-                  />
                 </td>
                 
                 {/* Nome do Contato */}

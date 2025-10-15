@@ -55,6 +55,8 @@ const Dashboard: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingBaseProdutos, setIsExportingBaseProdutos] = useState(false);
   const [showOnlyExported, setShowOnlyExported] = useState(false);
+  const [showOnlySelected, setShowOnlySelected] = useState(false);
+  const [showOnlyWithComments, setShowOnlyWithComments] = useState(false);
   
   // Hooks para comentários, notificações e usuário
   const { comments, addComment, firebaseError } = useComments();
@@ -71,6 +73,8 @@ const Dashboard: React.FC = () => {
     console.log('🔄 Resetando filtros do Dashboard');
     // Resetar estado de filtros ao montar o componente
     setShowOnlyExported(false);
+    setShowOnlySelected(false);
+    setShowOnlyWithComments(false);
     setSortOptions({ field: null, direction: null });
     
     // Garantir que todos os dados sejam exibidos
@@ -92,6 +96,8 @@ const Dashboard: React.FC = () => {
         setFilteredData(cotacaoItems);
         // Resetar filtros após carregar dados
         setShowOnlyExported(false);
+        setShowOnlySelected(false);
+        setShowOnlyWithComments(false);
         setSortOptions({ field: null, direction: null });
         console.log('✅ Dados carregados do Firebase:', cotacaoItems.length, 'itens');
       } catch (error) {
@@ -108,6 +114,8 @@ const Dashboard: React.FC = () => {
         setFilteredData(mockData);
         // Resetar filtros após carregar dados mock
         setShowOnlyExported(false);
+        setShowOnlySelected(false);
+        setShowOnlyWithComments(false);
         setSortOptions({ field: null, direction: null });
       } finally {
         setIsLoading(false);
@@ -124,7 +132,26 @@ const Dashboard: React.FC = () => {
 
       try {
         console.log('🔄 Carregando estados de seleção para usuário:', currentUser.id);
+        
+        // Tentar carregar do Firebase primeiro
         const states = await productSelectionService.loadSelectionState(currentUser.id);
+        
+        // Fallback para localStorage se Firebase falhar
+        if (states.selectedProducts.size === 0 && states.exportedProducts.size === 0) {
+          const localSelected = localStorage.getItem(`selectedProducts_${currentUser.id}`);
+          const localExported = localStorage.getItem(`exportedProducts_${currentUser.id}`);
+          
+          if (localSelected) {
+            states.selectedProducts = new Set(JSON.parse(localSelected));
+            console.log('📱 Estados carregados do localStorage (selecionados):', states.selectedProducts.size);
+          }
+          
+          if (localExported) {
+            states.exportedProducts = new Set(JSON.parse(localExported));
+            console.log('📱 Estados carregados do localStorage (exportados):', states.exportedProducts.size);
+          }
+        }
+        
         setSelectedProducts(states.selectedProducts);
         setExportedProducts(states.exportedProducts);
         
@@ -153,6 +180,24 @@ const Dashboard: React.FC = () => {
         }
       } catch (error) {
         console.error('❌ Erro ao carregar estados de seleção:', error);
+        
+        // Fallback para localStorage em caso de erro
+        if (currentUser?.id) {
+          const localSelected = localStorage.getItem(`selectedProducts_${currentUser.id}`);
+          const localExported = localStorage.getItem(`exportedProducts_${currentUser.id}`);
+          
+          if (localSelected) {
+            const selectedSet = new Set(JSON.parse(localSelected));
+            setSelectedProducts(selectedSet);
+            console.log('📱 Estados carregados do localStorage (fallback):', selectedSet.size);
+          }
+          
+          if (localExported) {
+            const exportedSet = new Set(JSON.parse(localExported));
+            setExportedProducts(exportedSet);
+            console.log('📱 Estados carregados do localStorage (fallback):', exportedSet.size);
+          }
+        }
       }
     };
 
@@ -176,17 +221,19 @@ const Dashboard: React.FC = () => {
     if (allData.length > 0) {
       console.log('🔄 Dados carregados, resetando filtros e exibindo todos os produtos');
       setShowOnlyExported(false);
+      setShowOnlySelected(false);
+      setShowOnlyWithComments(false);
       setSortOptions({ field: null, direction: null });
       setFilteredData(allData);
     }
   }, [allData]);
 
-  // Aplicar filtro de produtos exportados quando o estado mudar
+  // Aplicar filtros de produtos exportados, selecionados e com comentários quando o estado mudar
   useEffect(() => {
     const filteredByExported = applyExportedFilter(allData);
     const sortedData = sortData(filteredByExported, sortOptions);
     setFilteredData(sortedData);
-  }, [showOnlyExported, exportedProducts, allData, sortOptions]);
+  }, [showOnlyExported, showOnlySelected, showOnlyWithComments, exportedProducts, selectedProducts, comments, allData, sortOptions]);
 
   // Função para aplicar filtros
   const handleFilterChange = (newFilteredData: CotacaoItem[]) => {
@@ -218,15 +265,32 @@ const Dashboard: React.FC = () => {
     setFilteredData(sortedData);
   };
 
-  // Função para aplicar filtro de produtos exportados
+  // Função para aplicar filtros de produtos exportados, selecionados e com comentários
   const applyExportedFilter = (data: CotacaoItem[]) => {
+    let filteredData = data;
+    
     if (showOnlyExported) {
-      return data.filter(item => {
+      filteredData = filteredData.filter(item => {
         const productId = `${item.PHOTO_NO}-${item.referencia}`;
         return exportedProducts.has(productId);
       });
     }
-    return data;
+    
+    if (showOnlySelected) {
+      filteredData = filteredData.filter(item => {
+        const productId = `${item.PHOTO_NO}-${item.referencia}`;
+        return selectedProducts.has(productId);
+      });
+    }
+    
+    if (showOnlyWithComments) {
+      filteredData = filteredData.filter(item => {
+        const productId = `${item.PHOTO_NO}-${item.referencia}`;
+        return comments.some(comment => comment.productId === productId);
+      });
+    }
+    
+    return filteredData;
   };
 
   const handleImportComplete = async (importedData: CotacaoItem[]) => {
@@ -603,12 +667,20 @@ const Dashboard: React.FC = () => {
     
     setSelectedProducts(newSelectedProducts);
 
-    // Salvar no Firebase
+    // Salvar no Firebase e localStorage
     if (currentUser?.id) {
       try {
         await productSelectionService.updateSelectedProducts(currentUser.id, newSelectedProducts);
+        
+        // Backup no localStorage
+        localStorage.setItem(`selectedProducts_${currentUser.id}`, JSON.stringify(Array.from(newSelectedProducts)));
+        console.log('💾 Estados salvos no localStorage (selecionados):', newSelectedProducts.size);
       } catch (error) {
         console.error('Erro ao salvar seleção:', error);
+        
+        // Fallback: salvar apenas no localStorage
+        localStorage.setItem(`selectedProducts_${currentUser.id}`, JSON.stringify(Array.from(newSelectedProducts)));
+        console.log('📱 Estados salvos apenas no localStorage (fallback)');
       }
     }
   };
@@ -618,12 +690,20 @@ const Dashboard: React.FC = () => {
     const newSelectedProducts = new Set(allProductIds);
     setSelectedProducts(newSelectedProducts);
 
-    // Salvar no Firebase
+    // Salvar no Firebase e localStorage
     if (currentUser?.id) {
       try {
         await productSelectionService.updateSelectedProducts(currentUser.id, newSelectedProducts);
+        
+        // Backup no localStorage
+        localStorage.setItem(`selectedProducts_${currentUser.id}`, JSON.stringify(Array.from(newSelectedProducts)));
+        console.log('💾 Estados salvos no localStorage (selecionar todos):', newSelectedProducts.size);
       } catch (error) {
         console.error('Erro ao salvar seleção:', error);
+        
+        // Fallback: salvar apenas no localStorage
+        localStorage.setItem(`selectedProducts_${currentUser.id}`, JSON.stringify(Array.from(newSelectedProducts)));
+        console.log('📱 Estados salvos apenas no localStorage (fallback)');
       }
     }
   };
@@ -632,12 +712,20 @@ const Dashboard: React.FC = () => {
     const newSelectedProducts = new Set<string>();
     setSelectedProducts(newSelectedProducts);
 
-    // Salvar no Firebase
+    // Salvar no Firebase e localStorage
     if (currentUser?.id) {
       try {
         await productSelectionService.updateSelectedProducts(currentUser.id, newSelectedProducts);
+        
+        // Backup no localStorage
+        localStorage.setItem(`selectedProducts_${currentUser.id}`, JSON.stringify(Array.from(newSelectedProducts)));
+        console.log('💾 Estados salvos no localStorage (desmarcar todos):', newSelectedProducts.size);
       } catch (error) {
         console.error('Erro ao salvar seleção:', error);
+        
+        // Fallback: salvar apenas no localStorage
+        localStorage.setItem(`selectedProducts_${currentUser.id}`, JSON.stringify(Array.from(newSelectedProducts)));
+        console.log('📱 Estados salvos apenas no localStorage (fallback)');
       }
     }
   };
@@ -928,35 +1016,12 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Tabela de Cotações */}
-        <div className="cotacoes-table mb-6">
-          <CotacoesTable
-            data={filteredData}
-            onUpdateItem={handleUpdateItem}
-            onDeleteItem={handleDeleteItem}
-            isLoading={isLoading}
-            comments={comments}
-            currentUser={currentUser}
-            onAddComment={handleAddComment}
-            lightbox={lightbox}
-            sortOptions={sortOptions}
-            onSort={handleSort}
-            selectedProducts={selectedProducts}
-            exportedProducts={exportedProducts}
-            onToggleProductSelection={toggleProductSelection}
-            availableUsers={availableUsers.map(user => ({
-              id: user.id,
-              name: user.name,
-              email: user.email
-            }))}
-            usersLoading={usersLoading}
-          />
-        </div>
         {/* Busca e Filtros */}
         <SearchAndFilters 
           data={allData} 
           onFilterChange={handleFilterChange} 
         />
+        
         {/* Controles de Seleção */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
           <div className="flex items-center justify-between">
@@ -991,6 +1056,17 @@ const Dashboard: React.FC = () => {
                 {showOnlyExported ? 'Mostrar Todos' : 'Apenas Exportados'}
               </button>
               <button
+                onClick={() => setShowOnlySelected(!showOnlySelected)}
+                className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                  showOnlySelected 
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+                disabled={selectedProducts.size === 0}
+              >
+                {showOnlySelected ? 'Mostrar Todos' : 'Apenas Selecionados'}
+              </button>
+              <button
                 onClick={deselectAllProducts}
                 className="px-3 py-1.5 text-xs bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 disabled={selectedProducts.size === 0}
@@ -1007,9 +1083,21 @@ const Dashboard: React.FC = () => {
                   if (currentUser?.id) {
                     try {
                       await productSelectionService.clearSelectionState(currentUser.id);
+                      
+                      // Limpar também do localStorage
+                      localStorage.removeItem(`selectedProducts_${currentUser.id}`);
+                      localStorage.removeItem(`exportedProducts_${currentUser.id}`);
+                      console.log('🗑️ Estados limpos do localStorage');
+                      
                       showSuccess('Estados Limpos', 'Estados limpos com sucesso!');
                     } catch (error) {
                       console.error('Erro ao limpar estados:', error);
+                      
+                      // Fallback: limpar apenas do localStorage
+                      localStorage.removeItem(`selectedProducts_${currentUser.id}`);
+                      localStorage.removeItem(`exportedProducts_${currentUser.id}`);
+                      console.log('📱 Estados limpos apenas do localStorage (fallback)');
+                      showSuccess('Estados Limpos', 'Estados limpos do localStorage!');
                     }
                   }
                 }}
@@ -1052,6 +1140,29 @@ const Dashboard: React.FC = () => {
               <span className="text-blue-800 font-semibold">{totalExportados}</span>
             </div>
             <button
+              onClick={() => setShowOnlyWithComments(!showOnlyWithComments)}
+              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                showOnlyWithComments 
+                  ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' 
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+              }`}
+              disabled={comments.length === 0}
+              title="Mostrar apenas produtos que têm comentários"
+            >
+              {showOnlyWithComments ? 'Todos os Produtos' : 'Produtos com Comentários'}
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {filteredData.length !== allData.length && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <TrendingUp className="w-5 h-5" />
+                <span>
+                  Mostrando {filteredData.length} de {allData.length} itens
+                </span>
+              </div>
+            )}
+            <button
               onClick={() => window.location.reload()}
               className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
               title="Atualizar tabela de produtos"
@@ -1062,15 +1173,31 @@ const Dashboard: React.FC = () => {
                Atualizar
             </button>
           </div>
-          
-          {filteredData.length !== allData.length && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <TrendingUp className="w-5 h-5" />
-              <span>
-                Mostrando {filteredData.length} de {allData.length} itens
-              </span>
-            </div>
-          )}
+        </div>
+
+        {/* Tabela de Cotações */}
+        <div className="cotacoes-table mb-6">
+          <CotacoesTable
+            data={filteredData}
+            onUpdateItem={handleUpdateItem}
+            onDeleteItem={handleDeleteItem}
+            isLoading={isLoading}
+            comments={comments}
+            currentUser={currentUser}
+            onAddComment={handleAddComment}
+            lightbox={lightbox}
+            sortOptions={sortOptions}
+            onSort={handleSort}
+            selectedProducts={selectedProducts}
+            exportedProducts={exportedProducts}
+            onToggleProductSelection={toggleProductSelection}
+            availableUsers={availableUsers.map(user => ({
+              id: user.id,
+              name: user.name,
+              email: user.email
+            }))}
+            usersLoading={usersLoading}
+          />
         </div>
         
 

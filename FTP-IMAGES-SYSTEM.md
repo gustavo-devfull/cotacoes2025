@@ -220,3 +220,7 @@ src/components/CotacoesTable.tsx - Componente ProductImage
 
 
 
+
+
+
+

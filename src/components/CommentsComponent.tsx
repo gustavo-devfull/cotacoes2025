@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageCircle, Send, Image, X } from 'lucide-react';
 import { Comment as CommentType } from '../types';
 import { uploadService } from '../services/uploadService';
@@ -226,8 +227,8 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
       </button>
 
       {/* Modal de comentários */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {isOpen && createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -449,7 +450,8 @@ const CommentsComponent: React.FC<CommentsComponentProps> = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
