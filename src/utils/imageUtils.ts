@@ -78,3 +78,11 @@ export const validateFileType = (file: File): boolean => {
 
 
 
+
+
+
+
+
+
+
+

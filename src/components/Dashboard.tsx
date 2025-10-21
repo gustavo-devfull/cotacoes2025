@@ -16,7 +16,7 @@ import { useUsers } from '../contexts/UsersContext';
 import { useExportedProducts } from '../contexts/ExportedProductsContext';
 import { useProdutosJaExportados } from '../contexts/ProdutosJaExportadosContext';
 import { useProdutosExportadosPorFabrica } from '../contexts/ProdutosExportadosPorFabricaContext';
-import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare, FileSpreadsheet } from 'lucide-react';
+import { BarChart3, TrendingUp, Package, Upload, Database, Camera, Edit3, Download, CheckSquare, FileSpreadsheet, ChevronDown, ChevronRight } from 'lucide-react';
 import { formatDateTimeToBrazilian } from '../utils/dateUtils';
 import { sortData, getNextSortDirection } from '../utils/sortUtils';
 import { exportToExcel, formatDateForFilename, exportBaseProdutosToExcel, formatDateForBaseProdutosFilename } from '../utils/excelExport';
@@ -36,6 +36,7 @@ import {
 
 const Dashboard: React.FC = () => {
   const [allData, setAllData] = useState<CotacaoItem[]>([]);
+  const [isAjustesExpanded, setIsAjustesExpanded] = useState(false);
   const [filteredData, setFilteredData] = useState<CotacaoItem[]>([]);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -55,6 +56,7 @@ const Dashboard: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingBaseProdutos, setIsExportingBaseProdutos] = useState(false);
   const [showOnlyExported, setShowOnlyExported] = useState(false);
+  const [showOnlyWithComments, setShowOnlyWithComments] = useState(false);
   
   // Hooks para comentários, notificações e usuário
   const { comments, addComment, firebaseError } = useComments();
@@ -183,14 +185,33 @@ const Dashboard: React.FC = () => {
 
   // Aplicar filtro de produtos exportados quando o estado mudar
   useEffect(() => {
-    const filteredByExported = applyExportedFilter(allData);
-    const sortedData = sortData(filteredByExported, sortOptions);
+    let filteredData = applyExportedFilter(allData);
+    
+    // Aplicar filtro de comentários
+    if (showOnlyWithComments) {
+      filteredData = filteredData.filter(item => {
+        const productId = `${item.PHOTO_NO}-${item.referencia}`;
+        return comments.some(comment => comment.productId === productId);
+      });
+    }
+    
+    const sortedData = sortData(filteredData, sortOptions);
     setFilteredData(sortedData);
-  }, [showOnlyExported, exportedProducts, allData, sortOptions]);
+  }, [showOnlyExported, exportedProducts, allData, sortOptions, showOnlyWithComments, comments]);
 
   // Função para aplicar filtros
   const handleFilterChange = (newFilteredData: CotacaoItem[]) => {
-    const sortedData = sortData(newFilteredData, sortOptions);
+    let filteredData = newFilteredData;
+    
+    // Aplicar filtro de comentários
+    if (showOnlyWithComments) {
+      filteredData = filteredData.filter(item => {
+        const productId = `${item.PHOTO_NO}-${item.referencia}`;
+        return comments.some(comment => comment.productId === productId);
+      });
+    }
+    
+    const sortedData = sortData(filteredData, sortOptions);
     setFilteredData(sortedData);
   };
 
@@ -648,25 +669,18 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  // Função para exportar produtos selecionados
+  // Função para marcar produtos selecionados como exportados
   const handleExportSelectedProducts = async () => {
     const selectedData = getSelectedProductsData();
     
     if (selectedData.length === 0) {
-      showWarning('Nenhuma Seleção', 'Nenhum produto selecionado para exportação.');
+      showWarning('Nenhuma Seleção', 'Nenhum produto selecionado para marcar como exportado.');
       return;
     }
 
     setIsExporting(true);
     
     try {
-      const filename = formatDateForFilename();
-      exportToExcel(selectedData, {
-        filename,
-        sheetName: 'Produtos Selecionados',
-        includeHeaders: true
-      });
-
       // Marcar produtos como exportados e desmarcar seleção
       const exportedIds = selectedData.map(item => `${item.PHOTO_NO}-${item.referencia}`);
       addExportedProducts(exportedIds);
@@ -722,10 +736,10 @@ const Dashboard: React.FC = () => {
         return item;
       }));
 
-      showSuccess('Exportação Concluída', `${selectedData.length} produtos exportados com sucesso!`);
+      showSuccess('Produtos Marcados', `${selectedData.length} produtos marcados como exportados com sucesso!`);
     } catch (error) {
-      console.error('Erro ao exportar produtos:', error);
-      showError('Erro na Exportação', 'Erro ao exportar produtos. Verifique o console para mais detalhes.');
+      console.error('Erro ao marcar produtos:', error);
+      showError('Erro na Marcação', 'Erro ao marcar produtos como exportados. Verifique o console para mais detalhes.');
     } finally {
       setIsExporting(false);
     }
@@ -779,133 +793,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header 
-        className="shadow-sm border-b border-gray-200 p-2 rounded-xl"
-        style={{ backgroundColor: '#0175a6af' }}
-      >
-        <div className="w-full max-w-[1216px] mx-auto px-2 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo e Título */}
-            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-primary-200 to-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <BarChart3 className="w-4 h-4 sm:w-4 sm:h-4 text-[#0175a6]" />
-              </div>
-              <div className="min-w-0 flex items-center gap-3">
-                <h1 className="text-lg sm:text-xl font-light text-white truncate">
-                  Gerenciar Cotações
-                </h1>
-              </div>
-            </div>
-            
-            {/* Botões de Ação - Desktop */}
-            <div className="hidden sm:flex items-center space-x-4">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="btn-primary bg-[#0175a6] flex items-center gap-2 px-3 py-1.5 text-sm"
-                  disabled={isLoading}
-                >
-                  <Upload className="w-4 h-4" />
-                  {isLoading ? 'Carregando...' : 'Importar Planilha'}
-                </button>
-                
-                <button
-                  onClick={() => window.open('https://upload-imagens.onrender.com/', '_blank')}
-                  className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
-                >
-                  <Camera className="w-4 h-4" />
-                  Upload Imagens
-                </button>
-                
-                <button
-                  onClick={() => setShowEditModal(true)}
-                  className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
-                  disabled={isLoading || filteredData.length === 0}
-                >
-                  <Edit3 className="w-4 h-4" />
-                  Excluir Produtos
-                </button>
-
-                <button
-                  onClick={handleExportSelectedProducts}
-                  className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
-                  disabled={isExporting || selectedProducts.size === 0}
-                >
-                  <Download className="w-4 h-4" />
-                  {isExporting ? 'Exportando...' : `Marcar para a Base (${selectedProducts.size})`}
-                </button>
-
-                <button
-                  onClick={handleExportBaseProdutos}
-                  className="btn-primary bg-[#02618a] flex items-center gap-2 px-3 py-1.5 text-sm"
-                  disabled={isExportingBaseProdutos || allData.length === 0 || exportedProducts.size === 0}
-                >
-                  <FileSpreadsheet className="w-4 h-4" />
-                  {isExportingBaseProdutos ? 'Gerando Base...' : `Base de Produtos (${exportedProducts.size})`}
-                </button>
-              </div>
-              
-              <NotificationBell
-                notifications={notifications}
-                unreadCount={unreadCount}
-                onMarkAsRead={markAsRead}
-                onMarkAllAsRead={markAllAsRead}
-                onFilterByRef={filterByRef}
-              />
-            </div>
-
-            {/* Botões de Ação - Mobile */}
-            <div className="flex sm:hidden items-center space-x-2">
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="btn-primary flex items-center gap-1 px-2 py-1.5 text-xs"
-                disabled={isLoading}
-              >
-                <Upload className="w-3 h-3" />
-                <span className="hidden xs:inline">Importar</span>
-              </button>
-              
-              <button
-                onClick={() => window.open('https://upload-imagens.onrender.com/', '_blank')}
-                className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
-              >
-                <Camera className="w-3 h-3" />
-                <span className="hidden xs:inline">Imagens</span>
-              </button>
-              
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
-                disabled={isLoading || filteredData.length === 0}
-              >
-                <Edit3 className="w-3 h-3" />
-                <span className="hidden xs:inline">Editar</span>
-              </button>
-
-              <button
-                onClick={handleExportSelectedProducts}
-                className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
-                disabled={isExporting || selectedProducts.size === 0}
-              >
-                <Download className="w-3 h-3" />
-                <span className="hidden xs:inline">{isExporting ? 'Exportando...' : `Exportar (${selectedProducts.size})`}</span>
-              </button>
-              
-              <NotificationBell
-                notifications={notifications}
-                unreadCount={unreadCount}
-                onMarkAsRead={markAsRead}
-                onMarkAllAsRead={markAllAsRead}
-                onFilterByRef={filterByRef}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
-      <main className="w-full max-w-[1216px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-3">
         {/* Banner de erro Firebase */}
         {firebaseError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -928,149 +817,363 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Tabela de Cotações */}
-        <div className="cotacoes-table mb-6">
-          <CotacoesTable
-            data={filteredData}
-            onUpdateItem={handleUpdateItem}
-            onDeleteItem={handleDeleteItem}
-            isLoading={isLoading}
-            comments={comments}
-            currentUser={currentUser}
-            onAddComment={handleAddComment}
-            lightbox={lightbox}
-            sortOptions={sortOptions}
-            onSort={handleSort}
-            selectedProducts={selectedProducts}
-            exportedProducts={exportedProducts}
-            onToggleProductSelection={toggleProductSelection}
-            availableUsers={availableUsers.map(user => ({
-              id: user.id,
-              name: user.name,
-              email: user.email
-            }))}
-            usersLoading={usersLoading}
-          />
-        </div>
-        {/* Busca e Filtros */}
-        <SearchAndFilters 
-          data={allData} 
-          onFilterChange={handleFilterChange} 
-        />
-        {/* Controles de Seleção */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <CheckSquare className="w-4 h-4" />
-                Seleção de Produtos
-              </h3>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>{selectedProducts.size} selecionados</span>
-                <span className="text-gray-400">•</span>
-                <span>{exportedProducts.size} exportados</span>
-              </div>
+        {/* Card de Ajustes Recolhível */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          {/* Header do Card Ajustes */}
+          <div 
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => setIsAjustesExpanded(!isAjustesExpanded)}
+          >
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Ajustes
+              </h2>
+              <span className="text-sm text-gray-500">Controles e configurações</span>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={selectAllProducts}
-                className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
-                disabled={filteredData.length === 0}
-              >
-                Selecionar Todos
-              </button>
-              <button
-                onClick={() => setShowOnlyExported(!showOnlyExported)}
-                className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                  showOnlyExported 
-                    ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                }`}
-                disabled={exportedProducts.size === 0}
-              >
-                {showOnlyExported ? 'Mostrar Todos' : 'Apenas Exportados'}
-              </button>
-              <button
-                onClick={deselectAllProducts}
-                className="px-3 py-1.5 text-xs bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
-                disabled={selectedProducts.size === 0}
-              >
-                Desmarcar Todos
-              </button>
-              <button
-                onClick={async () => {
-                  showWarning('Confirmar Limpeza', 'Tem certeza que deseja limpar todos os estados de seleção e exportação?', { autoClose: false });
-                  // Aqui você pode implementar uma confirmação customizada se necessário
-                  // Por enquanto, vamos manter a funcionalidade direta
-                  setSelectedProducts(new Set());
-                  setExportedProducts(new Set());
-                  if (currentUser?.id) {
-                    try {
-                      await productSelectionService.clearSelectionState(currentUser.id);
-                      showSuccess('Estados Limpos', 'Estados limpos com sucesso!');
-                    } catch (error) {
-                      console.error('Erro ao limpar estados:', error);
-                    }
-                  }
-                }}
-                className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors"
-                disabled={selectedProducts.size === 0 && exportedProducts.size === 0}
-              >
-                Limpar Tudo
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const deletedCount = await notificationsService.deleteAllNotifications();
-                    if (deletedCount > 0) {
-                      showSuccess('Notificações Zeradas', `${deletedCount} notificação(ões) excluída(s) com sucesso!`);
-                    } else {
-                      showInfo('Nenhuma Notificação', 'Não há notificações para excluir.');
-                    }
-                  } catch (error) {
-                    console.error('Erro ao zerar notificações:', error);
-                    showError('Erro ao Zerar', 'Erro ao excluir notificações. Verifique o console para mais detalhes.');
-                  }
-                }}
-                className="px-3 py-1.5 text-xs bg-orange-50 text-orange-700 rounded-md hover:bg-orange-100 transition-colors"
-                title="Excluir todas as notificações do sistema"
-              >
-                Zerar Notificações
-              </button>
+              {isAjustesExpanded ? (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              )}
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-light text-gray-900 flex items-center gap-2">
-              <Package className="w-6 h-6 text-primary-600" />
-              Cotações ({filteredData.length} itens)
-            </h2>
-            <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
-              <span className="text-blue-700 font-medium">ProdutosJaExportados:</span>
-              <span className="text-blue-800 font-semibold">{totalExportados}</span>
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
-              title="Atualizar tabela de produtos"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-               Atualizar
-            </button>
-          </div>
-          
-          {filteredData.length !== allData.length && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <TrendingUp className="w-5 h-5" />
-              <span>
-                Mostrando {filteredData.length} de {allData.length} itens
-              </span>
+          {/* Conteúdo Recolhível - Controles de Ajustes */}
+          {isAjustesExpanded && (
+            <div className="border-t border-gray-200 p-4 space-y-4">
+              {/* Card Gerenciar Cotações */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-3">
+                  <Package className="w-4 h-4" />
+                  Gerenciar Cotações
+                </h3>
+                
+                {/* Botões de Ação - Desktop */}
+                <div className="hidden sm:block">
+                  {/* Primeira linha: Botões de Ação */}
+                  <div className="flex gap-3 mb-3">
+                    <button
+                      onClick={() => setShowImportModal(true)}
+                      className="btn-primary bg-[#0175a6] flex items-center gap-2 px-3 py-1.5 text-sm"
+                      disabled={isLoading}
+                    >
+                      <Upload className="w-4 h-4" />
+                      {isLoading ? 'Carregando...' : 'Importar Planilha'}
+                    </button>
+                    
+                    <button
+                      onClick={() => window.open('https://upload-imagens.onrender.com/', '_blank')}
+                      className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
+                    >
+                      <Camera className="w-4 h-4" />
+                      Upload Imagens
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowEditModal(true)}
+                      className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
+                      disabled={isLoading || filteredData.length === 0}
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      Excluir Produtos
+                    </button>
+
+                    <button
+                      onClick={handleExportSelectedProducts}
+                      className="btn-secondary flex items-center gap-2 px-3 py-1.5 text-sm"
+                      disabled={isExporting || selectedProducts.size === 0}
+                    >
+                      <Download className="w-4 h-4" />
+                      {isExporting ? 'Exportando...' : `Marcar para a Base (${selectedProducts.size})`}
+                    </button>
+
+                    <button
+                      onClick={handleExportBaseProdutos}
+                      className="btn-primary bg-[#02618a] flex items-center gap-2 px-3 py-1.5 text-sm"
+                      disabled={isExportingBaseProdutos || allData.length === 0 || exportedProducts.size === 0}
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      {isExportingBaseProdutos ? 'Gerando Base...' : `Base de Produtos (${exportedProducts.size})`}
+                    </button>
+                  </div>
+                  
+                  {/* Segunda linha: Campos de Cotações e Notificações */}
+                  <div className="flex items-center gap-3">
+                    {/* Contador de Itens */}
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Package className="w-4 h-4 text-primary-600" />
+                      <span className="font-medium">Cotações ({filteredData.length} itens)</span>
+                    </div>
+                    
+                    {/* ProdutosJaExportados */}
+                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
+                      <span className="text-blue-700 font-medium">ProdutosJaExportados:</span>
+                      <span className="text-blue-800 font-semibold">{totalExportados}</span>
+                    </div>
+                    
+                    {/* Botão Atualizar */}
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
+                      title="Atualizar tabela de produtos"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                    
+                    {/* Sino de Notificações */}
+                    <NotificationBell
+                      notifications={notifications}
+                      unreadCount={unreadCount}
+                      onMarkAsRead={markAsRead}
+                      onMarkAllAsRead={markAllAsRead}
+                      onFilterByRef={filterByRef}
+                    />
+                  </div>
+                </div>
+
+                {/* Botões de Ação - Mobile */}
+                <div className="flex sm:hidden items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setShowImportModal(true)}
+                      className="btn-primary flex items-center gap-1 px-2 py-1.5 text-xs"
+                      disabled={isLoading}
+                    >
+                      <Upload className="w-3 h-3" />
+                      <span className="hidden xs:inline">Importar</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => window.open('https://upload-imagens.onrender.com/', '_blank')}
+                      className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
+                    >
+                      <Camera className="w-3 h-3" />
+                      <span className="hidden xs:inline">Imagens</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowEditModal(true)}
+                      className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
+                      disabled={isLoading || filteredData.length === 0}
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span className="hidden xs:inline">Editar</span>
+                    </button>
+
+                    <button
+                      onClick={handleExportSelectedProducts}
+                      className="btn-secondary flex items-center gap-1 px-2 py-1.5 text-xs"
+                      disabled={isExporting || selectedProducts.size === 0}
+                    >
+                      <Download className="w-3 h-3" />
+                      <span className="hidden xs:inline">{isExporting ? 'Exportando...' : `Exportar (${selectedProducts.size})`}</span>
+                    </button>
+                  </div>
+                  
+                  {/* Campos de Cotações e Notificações - Mobile */}
+                  <div className="flex items-center gap-2">
+                    {/* Contador de Itens - Mobile */}
+                    <div className="flex items-center gap-1 text-xs text-gray-600">
+                      <Package className="w-3 h-3 text-primary-600" />
+                      <span className="font-medium">({filteredData.length})</span>
+                    </div>
+                    
+                    {/* ProdutosJaExportados - Mobile */}
+                    <div className="flex items-center gap-1 text-xs text-gray-600 bg-blue-50 px-2 py-1 rounded-full">
+                      <span className="text-blue-700 font-medium">Exp:</span>
+                      <span className="text-blue-800 font-semibold">{totalExportados}</span>
+                    </div>
+                    
+                    {/* Botão Atualizar - Mobile */}
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="bg-blue-500 hover:bg-blue-600 text-white p-1.5 rounded-md transition-colors duration-150 flex items-center justify-center"
+                      title="Atualizar tabela de produtos"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                    
+                    {/* Sino de Notificações - Mobile */}
+                    <NotificationBell
+                      notifications={notifications}
+                      unreadCount={unreadCount}
+                      onMarkAsRead={markAsRead}
+                      onMarkAllAsRead={markAllAsRead}
+                      onFilterByRef={filterByRef}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card de Busca */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-3">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Buscar
+                </h3>
+                <SearchAndFilters 
+                  data={allData} 
+                  onFilterChange={handleFilterChange} 
+                />
+              </div>
+
+              {/* Card de Seleção de Produtos */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <CheckSquare className="w-4 h-4" />
+                      Seleção de Produtos
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <span>{selectedProducts.size} selecionados</span>
+                      <span className="text-gray-400">•</span>
+                      <span>{exportedProducts.size} exportados</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={selectAllProducts}
+                      className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
+                      disabled={filteredData.length === 0}
+                    >
+                      Selecionar Todos
+                    </button>
+                    <button
+                      onClick={() => setShowOnlyExported(!showOnlyExported)}
+                      className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                        showOnlyExported 
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                      }`}
+                      disabled={exportedProducts.size === 0}
+                    >
+                      {showOnlyExported ? 'Mostrar Todos' : 'Apenas Exportados'}
+                    </button>
+                    <button
+                      onClick={deselectAllProducts}
+                      className="px-3 py-1.5 text-xs bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+                      disabled={selectedProducts.size === 0}
+                    >
+                      Desmarcar Todos
+                    </button>
+                    <button
+                      onClick={async () => {
+                        showWarning('Confirmar Limpeza', 'Tem certeza que deseja limpar todos os estados de seleção e exportação?', { autoClose: false });
+                        setSelectedProducts(new Set());
+                        setExportedProducts(new Set());
+                        if (currentUser?.id) {
+                          try {
+                            await productSelectionService.clearSelectionState(currentUser.id);
+                            showSuccess('Estados Limpos', 'Estados limpos com sucesso!');
+                          } catch (error) {
+                            console.error('Erro ao limpar estados:', error);
+                          }
+                        }
+                      }}
+                      className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors"
+                      disabled={selectedProducts.size === 0 && exportedProducts.size === 0}
+                    >
+                      Limpar Tudo
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const deletedCount = await notificationsService.deleteAllNotifications();
+                          if (deletedCount > 0) {
+                            showSuccess('Notificações Zeradas', `${deletedCount} notificação(ões) excluída(s) com sucesso!`);
+                          } else {
+                            showInfo('Nenhuma Notificação', 'Não há notificações para excluir.');
+                          }
+                        } catch (error) {
+                          console.error('Erro ao zerar notificações:', error);
+                          showError('Erro ao Zerar', 'Erro ao excluir notificações. Verifique o console para mais detalhes.');
+                        }
+                      }}
+                      className="px-3 py-1.5 text-xs bg-orange-50 text-orange-700 rounded-md hover:bg-orange-100 transition-colors"
+                      title="Excluir todas as notificações do sistema"
+                    >
+                      Zerar Notificações
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
+        </div>
+
+        {/* Card de Cotações - Sempre Visível */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-light text-gray-900 flex items-center gap-2">
+                <Package className="w-6 h-6 text-primary-600" />
+                Tabela de Produtos
+              </h2>
+              
+              {/* Filtro para produtos com comentários */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="showOnlyWithComments"
+                  checked={showOnlyWithComments}
+                  onChange={(e) => setShowOnlyWithComments(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label 
+                  htmlFor="showOnlyWithComments" 
+                  className="text-sm text-gray-700 cursor-pointer select-none"
+                >
+                  Apenas produtos com comentários
+                </label>
+              </div>
+            </div>
+            
+            {filteredData.length !== allData.length && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <TrendingUp className="w-5 h-5" />
+                <span>
+                  Mostrando {filteredData.length} de {allData.length} itens
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {/* Tabela de Cotações */}
+          <div className="cotacoes-table">
+            <CotacoesTable
+              data={filteredData}
+              onUpdateItem={handleUpdateItem}
+              onDeleteItem={handleDeleteItem}
+              isLoading={isLoading}
+              comments={comments}
+              currentUser={currentUser}
+              onAddComment={handleAddComment}
+              lightbox={lightbox}
+              sortOptions={sortOptions}
+              onSort={handleSort}
+              selectedProducts={selectedProducts}
+              exportedProducts={exportedProducts}
+              onToggleProductSelection={toggleProductSelection}
+              availableUsers={availableUsers.map(user => ({
+                id: user.id,
+                name: user.name,
+                email: user.email
+              }))}
+              usersLoading={usersLoading}
+            />
+          </div>
         </div>
         
 
