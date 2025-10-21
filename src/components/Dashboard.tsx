@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
   // Estados para exportação
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const { exportedProducts, setExportedProducts, addExportedProducts } = useExportedProducts();
-  const { totalExportados, adicionarProdutos } = useProdutosJaExportados();
+  const { adicionarProdutos } = useProdutosJaExportados();
   const { adicionarProdutosParaFabricas } = useProdutosExportadosPorFabrica();
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingBaseProdutos, setIsExportingBaseProdutos] = useState(false);
