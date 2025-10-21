@@ -900,32 +900,6 @@ const Dashboard: React.FC = () => {
                       <FileSpreadsheet className="w-4 h-4" />
                       {isExportingBaseProdutos ? 'Gerando Base...' : `Base de Produtos (${exportedProducts.size})`}
                     </button>
-                  </div>
-                  
-                  {/* Segunda linha: Campos de Cotações e Notificações */}
-                  <div className="flex items-center gap-3">
-                    {/* Contador de Itens */}
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Package className="w-4 h-4 text-primary-600" />
-                      <span className="font-medium">Cotações ({filteredData.length} itens)</span>
-                    </div>
-                    
-                    {/* ProdutosJaExportados */}
-                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
-                      <span className="text-blue-700 font-medium">ProdutosJaExportados:</span>
-                      <span className="text-blue-800 font-semibold">{totalExportados}</span>
-                    </div>
-                    
-                    {/* Botão Atualizar */}
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors duration-150 flex items-center justify-center"
-                      title="Atualizar tabela de produtos"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
                     
                     {/* Sino de Notificações */}
                     <NotificationBell
@@ -975,31 +949,14 @@ const Dashboard: React.FC = () => {
                       <Download className="w-3 h-3" />
                       <span className="hidden xs:inline">{isExporting ? 'Exportando...' : `Exportar (${selectedProducts.size})`}</span>
                     </button>
-                  </div>
-                  
-                  {/* Campos de Cotações e Notificações - Mobile */}
-                  <div className="flex items-center gap-2">
-                    {/* Contador de Itens - Mobile */}
-                    <div className="flex items-center gap-1 text-xs text-gray-600">
-                      <Package className="w-3 h-3 text-primary-600" />
-                      <span className="font-medium">({filteredData.length})</span>
-                    </div>
-                    
-                    {/* ProdutosJaExportados - Mobile */}
-                    <div className="flex items-center gap-1 text-xs text-gray-600 bg-blue-50 px-2 py-1 rounded-full">
-                      <span className="text-blue-700 font-medium">Exp:</span>
-                      <span className="text-blue-800 font-semibold">{totalExportados}</span>
-                    </div>
-                    
-                    {/* Botão Atualizar - Mobile */}
+
                     <button
-                      onClick={() => window.location.reload()}
-                      className="bg-blue-500 hover:bg-blue-600 text-white p-1.5 rounded-md transition-colors duration-150 flex items-center justify-center"
-                      title="Atualizar tabela de produtos"
+                      onClick={handleExportBaseProdutos}
+                      className="btn-primary bg-[#02618a] flex items-center gap-1 px-2 py-1.5 text-xs"
+                      disabled={isExportingBaseProdutos || allData.length === 0 || exportedProducts.size === 0}
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
+                      <FileSpreadsheet className="w-3 h-3" />
+                      <span className="hidden xs:inline">{isExportingBaseProdutos ? 'Gerando...' : `Base (${exportedProducts.size})`}</span>
                     </button>
                     
                     {/* Sino de Notificações - Mobile */}
