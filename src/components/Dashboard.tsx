@@ -1200,7 +1200,7 @@ const Dashboard: React.FC = () => {
       
       {/* Rodapé */}
       <footer className="bg-gray-50 border-t border-gray-200 py-4 px-16">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">
               Sistema de Gerenciamento de Cotações | Ravi

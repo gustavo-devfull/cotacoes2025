@@ -68,7 +68,7 @@ const Lightbox: React.FC<LightboxProps> = ({
       />
       
       {/* Container da imagem */}
-      <div className="relative max-w-7xl max-h-full p-4">
+      <div className="relative w-full max-h-full p-4">
         {/* Botão fechar */}
         <button
           onClick={onClose}
