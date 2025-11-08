@@ -4,6 +4,7 @@ import { UsersProvider } from '../contexts/UsersContext';
 import { ExportedProductsProvider } from '../contexts/ExportedProductsContext';
 import { ProdutosJaExportadosProvider } from '../contexts/ProdutosJaExportadosContext';
 import { ProdutosExportadosPorFabricaProvider } from '../contexts/ProdutosExportadosPorFabricaContext';
+import MainHeader from './MainHeader';
 import Navigation from './Navigation';
 import Dashboard from './Dashboard';
 import UserProfile from './UserProfile';
@@ -108,6 +109,7 @@ const App: React.FC = () => {
           <ProdutosJaExportadosProvider>
             <ProdutosExportadosPorFabricaProvider>
               <div className="min-h-screen bg-gray-50">
+                <MainHeader />
                 <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
                 <main className="w-full py-2 sm:px-6 lg:px-8">
                   <div className="px-4 py-2 sm:px-0">
