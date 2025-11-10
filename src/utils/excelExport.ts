@@ -200,7 +200,7 @@ export const exportBaseProdutosToExcel = async (
   const headerRow = worksheet.addRow(headers);
   
   // Aplicar formatação no cabeçalho (cores e estilo)
-  headerRow.eachCell((cell, colNumber) => {
+  headerRow.eachCell((cell) => {
     cell.fill = {
       type: 'pattern',
       pattern: 'solid',
