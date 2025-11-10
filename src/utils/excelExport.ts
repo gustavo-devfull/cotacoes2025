@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { CotacaoItem } from '../types';
 import { BaseProdutoItem } from '../services/baseProdutosService';
 
@@ -134,93 +135,246 @@ export const formatDateForBaseProdutosFilename = (): string => {
   return `base_produtos_${year}${month}${day}_${hours}${minutes}.xlsx`;
 };
 
-export const exportBaseProdutosToExcel = (
+// Função auxiliar para baixar imagem e converter para buffer
+const fetchImageAsBuffer = async (url: string): Promise<ArrayBuffer | null> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    return await response.arrayBuffer();
+  } catch (error) {
+    console.error(`Erro ao baixar imagem ${url}:`, error);
+    return null;
+  }
+};
+
+export const exportBaseProdutosToExcel = async (
   data: BaseProdutoItem[],
   options: ExportOptions = {}
-): void => {
+): Promise<void> => {
   const {
     filename = 'base_produtos.xlsx',
     sheetName = 'Base de Produtos'
   } = options;
 
-  // Preparar dados para exportação
-  const exportData = data.map(item => ({
-    'linhaCotacoes': item.linhaCotacoes,
-    'referencia': item.referencia,
-    'fabrica': item.fabrica,
-    'itemNo': item.itemNo,
-    'description': item.description,
-    'name': item.name,
-    'remark': item.remark,
-    'obs': item.obs,
-    'moq': item.moq,
-    'unitCtn': item.unitCtn,
-    'unitPriceRmb': item.unitPriceRmb,
-    'unit': item.unit,
-    'l': item.l,
-    'w': item.w,
-    'h': item.h,
-    'cbm': item.cbm,
-    'gw': item.gw,
-    'nw': item.nw,
-    'pesoUnitario': item.pesoUnitario,
-    'marca': item.marca,
-    'codRavi': item.codRavi,
-    'ean': item.ean,
-    'dun': item.dun,
-    'nomeInvoiceEn': item.nomeInvoiceEn,
-    'nomeDiNb': item.nomeDiNb,
-    'nomeRaviProfit': item.nomeRaviProfit,
-    'qtMinVenda': item.qtMinVenda,
-    'ncm': item.ncm,
-    'cest': item.cest,
-    'valorInvoiceUsd': item.valorInvoiceUsd,
-    'obsPedido': item.obsPedido
-  }));
+  // Criar workbook com ExcelJS
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(sheetName);
 
-  // Criar workbook
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(exportData);
-
-  // Ajustar largura das colunas
-  const colWidths = [
-    { wch: 15 }, // Linha Cotações
-    { wch: 12 }, // Referência
-    { wch: 20 }, // Fábrica
-    { wch: 12 }, // Item No
-    { wch: 30 }, // Description
-    { wch: 20 }, // Name
-    { wch: 30 }, // Remark
-    { wch: 20 }, // OBS
-    { wch: 8 },  // MOQ
-    { wch: 10 }, // Unit/Ctn
-    { wch: 12 }, // Unit Price RMB
-    { wch: 8 },  // Unit
-    { wch: 8 },  // L
-    { wch: 8 },  // W
-    { wch: 8 },  // H
-    { wch: 8 },  // CBM
-    { wch: 8 },  // G.W
-    { wch: 8 },  // N.W
-    { wch: 12 }, // Peso Unitário
-    { wch: 15 }, // Marca
-    { wch: 12 }, // Cod Ravi
-    { wch: 15 }, // EAN
-    { wch: 15 }, // DUN
-    { wch: 25 }, // Nome Invoice EN
-    { wch: 15 }, // Nome DI NB
-    { wch: 15 }, // Nome Ravi Profit
-    { wch: 12 }, // Qt Min Venda
-    { wch: 12 }, // NCM
-    { wch: 12 }, // CEST
-    { wch: 15 }, // Valor Invoice USD
-    { wch: 20 }  // OBS Pedido
+  // Definir cabeçalhos com cores (formatação igual ao exporta_planilha)
+  const headers = [
+    'Foto',
+    'Linha Cotacoes',
+    'Referencia',
+    'Fabrica',
+    'Item No',
+    'Description',
+    'Name',
+    'Remark',
+    'OBS',
+    'MOQ',
+    'Unit/Ctn',
+    'Unit Price RMB',
+    'Unit',
+    'L',
+    'W',
+    'H',
+    'CBM',
+    'G.W',
+    'N.W',
+    'Peso Unitario (kg)',
+    'Marca',
+    'Cod Ravi',
+    'EAN',
+    'DUN',
+    'Nome Invoice EN',
+    'Nome DI NB',
+    'Nome Ravi Profit',
+    'Qt Min Venda',
+    'NCM',
+    'CEST',
+    'Valor Invoice USD',
+    'OBS Pedido'
   ];
-  ws['!cols'] = colWidths;
 
-  // Adicionar worksheet ao workbook
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  // Adicionar linha de cabeçalho com formatação
+  const headerRow = worksheet.addRow(headers);
+  
+  // Aplicar formatação no cabeçalho (cores e estilo)
+  headerRow.eachCell((cell, colNumber) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' } // Azul similar ao exporta_planilha
+    };
+    cell.font = {
+      color: { argb: 'FFFFFFFF' }, // Texto branco
+      bold: true,
+      size: 11
+    };
+    cell.alignment = {
+      vertical: 'middle',
+      horizontal: 'center',
+      wrapText: true
+    };
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
 
-  // Salvar arquivo
-  XLSX.writeFile(wb, filename);
+  // Ajustar altura da linha do cabeçalho
+  headerRow.height = 25;
+
+  // Adicionar dados
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    const row = worksheet.addRow([
+      '', // Foto - será preenchida depois
+      item.linhaCotacoes || '',
+      item.referencia || '',
+      item.fabrica || '',
+      item.itemNo || '',
+      item.description || '',
+      item.name || '',
+      item.remark || '',
+      item.obs || '',
+      item.moq || 0,
+      item.unitCtn || 0,
+      item.unitPriceRmb || 0,
+      item.unit || '',
+      item.l || 0,
+      item.w || 0,
+      item.h || 0,
+      item.cbm || 0,
+      item.gw || 0,
+      item.nw || 0,
+      item.pesoUnitario || 0,
+      item.marca || '',
+      item.codRavi || '',
+      item.ean || '',
+      item.dun || '',
+      item.nomeInvoiceEn || '',
+      item.nomeDiNb || '',
+      item.nomeRaviProfit || '',
+      item.qtMinVenda || 0,
+      item.ncm || '',
+      item.cest || '',
+      item.valorInvoiceUsd || 0,
+      item.obsPedido || ''
+    ]);
+
+    // Aplicar formatação nas células numéricas
+    const numericColumns = [9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 27, 30]; // Índices das colunas numéricas (0-based)
+    numericColumns.forEach(colIndex => {
+      const cell = row.getCell(colIndex + 1); // ExcelJS usa 1-based
+      if (typeof cell.value === 'number') {
+        if (colIndex === 9 || colIndex === 10 || colIndex === 27) { // MOQ, Unit/Ctn, Qt Min Venda
+          cell.numFmt = '#,##0';
+        } else if (colIndex === 11 || colIndex === 13 || colIndex === 14 || colIndex === 15 || colIndex === 17 || colIndex === 18 || colIndex === 30) { // Preços, dimensões, pesos, valores
+          cell.numFmt = '#,##0.00';
+        } else if (colIndex === 16 || colIndex === 19) { // CBM, Peso Unitario
+          cell.numFmt = '#,##0.000';
+        }
+      }
+    });
+
+    // Adicionar imagem na primeira coluna (Foto)
+    if (item.referencia) {
+      const cleanRef = item.referencia.trim().toUpperCase();
+      const imageUrl = `https://ideolog.ia.br/images/products/${cleanRef}.jpg`;
+      
+      try {
+        const imageBuffer = await fetchImageAsBuffer(imageUrl);
+        if (imageBuffer) {
+          // ExcelJS aceita ArrayBuffer diretamente
+          const imageId = workbook.addImage({
+            buffer: imageBuffer,
+            extension: 'jpeg'
+          });
+          
+          // Inserir imagem na célula (coluna A, linha i+2 porque linha 1 é cabeçalho)
+          worksheet.addImage(imageId, {
+            tl: { col: 0, row: i + 1 },
+            ext: { width: 100, height: 100 }
+          });
+          
+          // Ajustar altura da linha para acomodar a imagem
+          row.height = 100;
+        }
+      } catch (error) {
+        console.error(`Erro ao adicionar imagem para ${item.referencia}:`, error);
+      }
+    }
+
+    // Aplicar bordas nas células
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+        left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+        bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+        right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+      };
+      cell.alignment = {
+        vertical: 'middle',
+        horizontal: 'left',
+        wrapText: true
+      };
+    });
+  }
+
+  // Ajustar larguras das colunas
+  worksheet.columns = [
+    { width: 15 }, // Foto
+    { width: 18 }, // Linha Cotacoes
+    { width: 15 }, // Referencia
+    { width: 20 }, // Fabrica
+    { width: 12 }, // Item No
+    { width: 35 }, // Description
+    { width: 25 }, // Name
+    { width: 30 }, // Remark
+    { width: 25 }, // OBS
+    { width: 10 }, // MOQ
+    { width: 12 }, // Unit/Ctn
+    { width: 15 }, // Unit Price RMB
+    { width: 10 }, // Unit
+    { width: 10 }, // L
+    { width: 10 }, // W
+    { width: 10 }, // H
+    { width: 10 }, // CBM
+    { width: 10 }, // G.W
+    { width: 10 }, // N.W
+    { width: 18 }, // Peso Unitario (kg)
+    { width: 15 }, // Marca
+    { width: 15 }, // Cod Ravi
+    { width: 18 }, // EAN
+    { width: 18 }, // DUN
+    { width: 30 }, // Nome Invoice EN
+    { width: 18 }, // Nome DI NB
+    { width: 20 }, // Nome Ravi Profit
+    { width: 15 }, // Qt Min Venda
+    { width: 12 }, // NCM
+    { width: 12 }, // CEST
+    { width: 18 }, // Valor Invoice USD
+    { width: 25 }  // OBS Pedido
+  ];
+
+  // Congelar primeira linha (cabeçalho)
+  worksheet.views = [
+    {
+      state: 'frozen',
+      ySplit: 1
+    }
+  ];
+
+  // Gerar buffer e fazer download
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.URL.revokeObjectURL(url);
 };

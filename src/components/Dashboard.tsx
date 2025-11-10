@@ -776,7 +776,7 @@ const Dashboard: React.FC = () => {
       const sortedBaseProdutos = sortBaseProdutos(uniqueBaseProdutos);
       
       const filename = formatDateForBaseProdutosFilename();
-      exportBaseProdutosToExcel(sortedBaseProdutos, {
+      await exportBaseProdutosToExcel(sortedBaseProdutos, {
         filename,
         sheetName: 'Base de Produtos',
         includeHeaders: true
